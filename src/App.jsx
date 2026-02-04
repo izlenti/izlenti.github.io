@@ -700,7 +700,7 @@ const App = () => {
             <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
-                        <img src="/icon.png" alt="İzlenti" className="h-12 group-hover:scale-110 transition-transform duration-200" />
+                        <img src="/icon.png" alt="İzlenti" className="h-20 group-hover:scale-110 transition-transform duration-200" />
                         <h1 className="text-2xl font-black tracking-tight hidden sm:block text-white">İZLENTİ</h1>
                     </div>
 
