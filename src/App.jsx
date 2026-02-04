@@ -7,7 +7,7 @@ const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/original';
 const LOGO_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
-// --- MOVIQ KATEGORİ MOTORU (FİLMLER) ---
+// --- İZLENTİ KATEGORİ MOTORU (FİLMLER) ---
 const MOVIE_CATEGORIES = [
     // ✨ ÖZEL KATEGORİLER
     { id: 'trending', name: 'Gündemdekiler', icon: <TrendingUp className="text-orange-400" />, type: 'movie_trending', section: 'special', disableSort: true },
@@ -39,7 +39,7 @@ const MOVIE_CATEGORIES = [
     { id: 'western', name: 'Western', icon: <Star className="text-orange-600" />, type: 'movie', section: 'genre', params: '&with_genres=37&vote_count.gte=300', defaultSort: 'vote_average.desc' },
 ];
 
-// --- MOVIQ KATEGORİ MOTORU (DİZİLER) ---
+// --- İZLENTİ KATEGORİ MOTORU (DİZİLER) ---
 const TV_CATEGORIES = [
     // ✨ ÖZEL KATEGORİLER
     { id: 'trending_tv', name: 'Gündemdekiler', icon: <TrendingUp className="text-orange-400" />, type: 'tv_trending', section: 'special', disableSort: true },
@@ -703,7 +703,7 @@ const App = () => {
                         <div className="bg-gradient-to-tr from-cyan-600 to-blue-600 p-2 rounded-lg shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition">
                             <MonitorPlay className="w-6 h-6 text-white" />
                         </div>
-                        <h1 className="text-2xl font-black tracking-tight hidden sm:block text-white font-mono">MOVIQ</h1>
+                        <h1 className="text-2xl font-black tracking-tight hidden sm:block text-white font-mono">İZLENTİ</h1>
                     </div>
 
                     <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
@@ -774,7 +774,7 @@ const App = () => {
                                 Ne İzleyeceğine Karar Veremedin mi?
                             </h2>
                             <p className="text-slate-400 max-w-xl mx-auto text-lg font-light leading-relaxed">
-                                MOVIQ, global veri tabanlarını tarar, puanları analiz eder ve sana en doğru sonucu sunar.
+                                İzlenti, global veri tabanlarını tarar, puanları analiz eder ve sana en doğru sonucu sunar.
                             </p>
                         </div>
 
@@ -868,9 +868,9 @@ const App = () => {
                                     <Brain className="w-6 h-6 text-cyan-400" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-cyan-300 mb-2">MOVIQ Nasıl Çalışır?</h3>
+                                    <h3 className="font-bold text-cyan-300 mb-2">İzlenti Nasıl Çalışır?</h3>
                                     <p className="text-slate-400 text-sm leading-relaxed">
-                                        MOVIQ, TMDB (The Movie Database) verilerini gerçek zamanlı olarak analiz eder.
+                                        İzlenti, TMDB (The Movie Database) verilerini gerçek zamanlı olarak analiz eder.
                                         Puanlama, oy sayısı, bütçe-hasılat dengesi ve izleyici trendlerini değerlendirerek
                                         size akıllı öneriler sunar. Veriler sürekli güncellenir!
                                     </p>
@@ -1354,7 +1354,7 @@ const App = () => {
                             </span>
                         </div>
                         <div className="text-[10px] text-slate-600">
-                            MOVIQ © 2026 | Kişisel Kullanım
+                            İzlenti © 2026 | Kişisel Kullanım
                         </div>
                     </div>
                 </div>
