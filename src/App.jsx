@@ -699,11 +699,8 @@ const App = () => {
             {/* Header */}
             <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 cursor-pointer group" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
-                        <div className="bg-gradient-to-tr from-cyan-600 to-blue-600 p-2 rounded-lg shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition">
-                            <MonitorPlay className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-black tracking-tight hidden sm:block text-white font-mono">İZLENTİ</h1>
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
+                        <img src="/izlenti-logo.png" alt="İzlenti Logo" className="h-10 group-hover:scale-105 transition" />
                     </div>
 
                     <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
