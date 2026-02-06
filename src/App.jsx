@@ -699,9 +699,8 @@ const App = () => {
             {/* Header */}
             <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
-                        <img src="/icon.png" alt="İzlenti" className="h-20 group-hover:scale-110 transition-transform duration-200" />
-                        <h1 className="text-2xl font-black tracking-tight hidden sm:block text-white">İZLENTİ</h1>
+                    <div className="flex items-center cursor-pointer group -my-4" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
+                        <img src="/icon.png" alt="İzlenti" className="h-20 md:h-28 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-all duration-300 ease-out" />
                     </div>
 
                     <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
