@@ -16,6 +16,7 @@ const MOVIE_CATEGORIES = [
     { id: 'apple_movies', name: 'Apple TV+', icon: <Award className="text-slate-200" />, type: 'movie', section: 'special', params: '&with_watch_providers=350&watch_region=US&with_watch_monetization_types=flatrate&vote_count.gte=100', defaultSort: 'popularity.desc' },
     { id: 'prime_movies', name: 'Prime Video', icon: <PlayCircle className="text-blue-400" />, type: 'movie', section: 'special', params: '&with_watch_providers=119&watch_region=TR&vote_count.gte=200', defaultSort: 'popularity.desc' },
     { id: 'disney_movies', name: 'Disney+', icon: <Sparkles className="text-purple-400" />, type: 'movie', section: 'special', params: '&with_watch_providers=337&watch_region=TR&vote_count.gte=200', defaultSort: 'popularity.desc' },
+    { id: 'turkcell_movies', name: 'Turkcell TV+', icon: <Zap className="text-yellow-400" />, type: 'movie', section: 'special', params: '&watch_region=TR&vote_count.gte=100', defaultSort: 'popularity.desc' },
     { id: 'turkish_movies', name: 'Türk Filmleri', icon: <Heart className="text-red-500" />, type: 'movie', section: 'special', params: '&with_original_language=tr&vote_count.gte=100', defaultSort: 'popularity.desc' },
     { id: 'korean', name: 'K-Cinema', icon: <Globe className="text-blue-300" />, type: 'movie', section: 'special', params: '&with_original_language=ko&vote_count.gte=300', defaultSort: 'popularity.desc' },
     { id: '90s', name: '90\'lar Nostaljisi', icon: <Calendar className="text-indigo-400" />, type: 'movie', section: 'special', params: '&primary_release_date.gte=1990-01-01&primary_release_date.lte=1999-12-31&vote_count.gte=3000', defaultSort: 'vote_average.desc' },
@@ -47,6 +48,7 @@ const TV_CATEGORIES = [
     { id: 'netflix', name: 'Netflix Dizileri', icon: <Tv className="text-red-500" />, type: 'tv', section: 'special', params: '&with_networks=213&vote_count.gte=300', defaultSort: 'popularity.desc' },
     { id: 'hbo', name: 'HBO Kalitesi', icon: <Award className="text-white" />, type: 'tv', section: 'special', params: '&with_networks=49&vote_count.gte=300', defaultSort: 'popularity.desc' },
     { id: 'disney_tv', name: 'Disney+ Originals', icon: <Sparkles className="text-purple-400" />, type: 'tv', section: 'special', params: '&with_networks=2739&vote_count.gte=200', defaultSort: 'popularity.desc' },
+    { id: 'turkcell_tv', name: 'Turkcell TV+', icon: <Zap className="text-yellow-400" />, type: 'tv', section: 'special', params: '&watch_region=TR&vote_count.gte=50', defaultSort: 'popularity.desc' },
     { id: 'local_tv', name: 'Yerli Diziler', icon: <Heart className="text-red-500" />, type: 'tv', section: 'special', params: '&with_original_language=tr&vote_count.gte=20', defaultSort: 'popularity.desc' },
     { id: 'kdrama', name: 'K-Drama', icon: <Globe className="text-blue-300" />, type: 'tv', section: 'special', params: '&with_original_language=ko&vote_count.gte=150', defaultSort: 'popularity.desc' },
     { id: 'anime', name: 'Anime', icon: <Brain className="text-pink-500" />, type: 'tv', section: 'special', params: '&with_original_language=ja&with_genres=16&vote_count.gte=400', defaultSort: 'popularity.desc' },
@@ -1151,9 +1153,9 @@ const App = () => {
                                         <span className="bg-white/10 border border-white/10 px-3 py-1 rounded-md">{(selectedMovie.release_date || selectedMovie.first_air_date || '').substring(0, 4)}</span>
                                         <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-md border border-white/5"><Clock className="w-3.5 h-3.5 text-cyan-400" /> {selectedMovie.runtime || (selectedMovie.episode_run_time ? selectedMovie.episode_run_time[0] : '?')} dk</span>
                                         {!analysis.isUnreleased && (
-                                            <span className="flex items-center gap-1.5 bg-yellow-500/10 px-3 py-1 rounded-md border border-yellow-500/20" title="The Movie Database (TMDB) Kullanıcı Puanı">
-                                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                                                TMDB: {selectedMovie.vote_average?.toFixed(1)} ({selectedMovie.vote_count?.toLocaleString()} oy)
+                                            <span className="flex items-center gap-1.5 bg-yellow-500/10 px-3 py-1 rounded-md border border-yellow-500/20" title="İzleyici Oyu">
+                                                <Heart className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                                                {selectedMovie.vote_count?.toLocaleString()} oy
                                             </span>
                                         )}
                                     </div>
@@ -1172,11 +1174,7 @@ const App = () => {
                                             <div className="text-5xl mb-2">{analysis.verdictIcon}</div>
                                             <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">{analysis.verdict}</h2>
                                             <div className="mt-3 flex items-center justify-center gap-3 text-white/80 text-sm">
-                                                {!analysis.isUnreleased && (
-                                                    <span className="flex items-center gap-1" title="TMDB Puanı">
-                                                        <Star className="w-4 h-4 fill-white" /> TMDB: {analysis.score?.toFixed(1)}/10
-                                                    </span>
-                                                )}
+
                                                 <span>•</span>
                                                 <span>{analysis.votes?.toLocaleString()} oy</span>
                                                 {analysis.runtime > 0 && (
