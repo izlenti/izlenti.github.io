@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Star, ExternalLink, Film, Tv, X, Loader2, Sparkles, Clock, TrendingUp, Award, Globe, ChevronRight, PlayCircle, ThumbsUp, Zap, Ghost, Smile, Brain, Rocket, Calendar, Coffee, PlusCircle, ArrowUpDown, Filter, Baby, Skull, MonitorPlay, Info, Heart, Camera, Vote, HeartHandshake } from 'lucide-react';
 
 const TMDB_API_KEY = '15d2ea6d0dc1d476efbca3eba2b9bbfb';
