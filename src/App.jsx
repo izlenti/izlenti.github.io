@@ -630,6 +630,7 @@ const App = () => {
 
     const selectMovie = async (movie) => {
         setLoading(true);
+        setError(null); // Clear any previous errors
         navigateTo('detail', { movieId: movie.id });
         setSelectedMovie(null);
         setBgImage(null);
@@ -738,16 +739,16 @@ const App = () => {
 
             {/* Header */}
             <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative">
-                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center cursor-pointer group -my-10 relative z-50" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
-                        <img src="/icon.png" alt="İzlenti" className="h-32 md:h-48 drop-shadow-[0_0_25px_rgba(6,182,212,0.6)] group-hover:scale-110 transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)" />
+                <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+                    <div className="flex items-center cursor-pointer group -my-4 md:-my-10 relative z-50 order-1" onClick={() => { navigateTo('home'); setBgImage(null); setQuery(''); setError(null); }}>
+                        <img src="/icon.png" alt="İzlenti" className="h-20 md:h-48 drop-shadow-[0_0_25px_rgba(6,182,212,0.6)] group-hover:scale-110 transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)" />
                     </div>
 
 
 
 
                     {/* Instant Search Form */}
-                    <form onSubmit={handleSearch} className="flex-1 max-w-xl relative group z-50">
+                    <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-1 max-w-xl relative group z-50 order-3 md:order-2 mt-2 md:mt-0">
                         <input
                             type="text"
                             placeholder="Film, Dizi, Oyuncu..."
@@ -777,9 +778,9 @@ const App = () => {
                                             setShowSuggestions(false);
                                             setQuery('');
                                         }}
-                                        className="flex items-center gap-3 p-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5 last:border-0"
+                                        className="flex items-center gap-3 p-3 md:p-4 hover:bg-white/5 cursor-pointer transition border-b border-white/5 last:border-0"
                                     >
-                                        <div className="w-10 h-14 bg-slate-800 rounded overflow-hidden flex-shrink-0">
+                                        <div className="w-12 h-16 md:w-14 md:h-20 bg-slate-800 rounded overflow-hidden flex-shrink-0">
                                             {item.poster_path ? (
                                                 <img src={`${IMAGE_BASE_URL}${item.poster_path}`} className="w-full h-full object-cover" alt="" />
                                             ) : (
@@ -803,7 +804,7 @@ const App = () => {
                     {/* Watchlist Button */}
                     <button
                         onClick={() => navigateTo('watchlist')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition group relative"
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition group relative order-2 md:order-3"
                         title="İzleme Listem"
                     >
                         <Heart className={`w-5 h-5 ${view === 'watchlist' ? 'fill-red-500 text-red-500' : 'text-slate-400 group-hover:text-red-400'}`} />
@@ -890,12 +891,12 @@ const App = () => {
                                                 <h3 className="text-xl font-bold text-white">Özel Kategoriler</h3>
                                                 <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
                                             </div>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                                                 {specialCategories.map((cat) => (
                                                     <div
                                                         key={cat.id}
                                                         onClick={() => discoverByCategory(cat)}
-                                                        className="bg-[#0f172a] hover:bg-[#1e293b] border border-white/5 hover:border-cyan-500/40 p-5 rounded-2xl cursor-pointer transition-all duration-300 group flex items-center gap-4 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-900/10"
+                                                        className="bg-[#0f172a] hover:bg-[#1e293b] border border-white/5 hover:border-cyan-500/40 p-3 md:p-5 rounded-2xl cursor-pointer transition-all duration-300 group flex items-center gap-3 md:gap-4 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-900/10"
                                                     >
                                                         <div className="bg-white/5 p-3 rounded-xl group-hover:scale-110 transition duration-300 shadow-inner">
                                                             {cat.icon}
@@ -916,12 +917,12 @@ const App = () => {
                                                 <h3 className="text-xl font-bold text-white">Türlerine Göre {activeMediaType === 'movie' ? 'Filmler' : 'Diziler'}</h3>
                                                 <div className="flex-1 h-px bg-gradient-to-r from-purple-500/50 to-transparent"></div>
                                             </div>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                                                 {genreCategories.map((cat) => (
                                                     <div
                                                         key={cat.id}
                                                         onClick={() => discoverByCategory(cat)}
-                                                        className="bg-[#0f172a] hover:bg-[#1e293b] border border-white/5 hover:border-purple-500/40 p-5 rounded-2xl cursor-pointer transition-all duration-300 group flex items-center gap-4 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-900/10"
+                                                        className="bg-[#0f172a] hover:bg-[#1e293b] border border-white/5 hover:border-purple-500/40 p-3 md:p-5 rounded-2xl cursor-pointer transition-all duration-300 group flex items-center gap-3 md:gap-4 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-900/10"
                                                     >
                                                         <div className="bg-white/5 p-3 rounded-xl group-hover:scale-110 transition duration-300 shadow-inner">
                                                             {cat.icon}
