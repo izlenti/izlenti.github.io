@@ -96,7 +96,98 @@ const fetchWikipediaAwards = async (title, year) => {
 const App = () => {
     const [view, setView] = useState('home');
     const [query, setQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const [activeMediaType, setActiveMediaType] = useState('movie'); // 'movie' or 'tv'
+
+    // ... (existing state) ...
+
+    // Instant Search Effect
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (query.trim().length < 2) {
+                setSuggestions([]);
+                setShowSuggestions(false);
+                return;
+            }
+
+            try {
+                const url = `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=tr-TR&include_adult=false&page=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.results) {
+                    const filtered = data.results
+                        .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+                        .sort((a, b) => b.popularity - a.popularity)
+                        .slice(0, 5); // Top 5 results
+                    setSuggestions(filtered);
+                    setShowSuggestions(true);
+                }
+            } catch (err) {
+                console.error("Suggestion error:", err);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchSuggestions, 300); // 300ms debounce
+        return () => clearTimeout(timeoutId);
+    }, [query]);
+
+    // ... (rest of component) ...
+
+    // Header UI with Suggestions
+    <form onSubmit={handleSearch} className="flex-1 max-w-xl relative group z-50">
+        <input
+            type="text"
+            placeholder="Film, Dizi, Oyuncu..."
+            className="w-full bg-white/5 border border-white/10 rounded-full py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => query.length > 2 && setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow clicks
+        />
+        <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-500" />
+
+        {/* Clear Button */}
+        {query && (
+            <button type="button" onClick={() => { setQuery(''); setSuggestions([]); }} className="absolute right-4 top-3.5 text-slate-500 hover:text-white transition">
+                <X className="w-4 h-4" />
+            </button>
+        )}
+
+        {/* Suggestions Dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#0F172A] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                {suggestions.map((item) => (
+                    <div
+                        key={item.id}
+                        onClick={() => {
+                            selectMovie(item);
+                            setShowSuggestions(false);
+                            setQuery('');
+                        }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 cursor-pointer transition border-b border-white/5 last:border-0"
+                    >
+                        <div className="w-10 h-14 bg-slate-800 rounded overflow-hidden flex-shrink-0">
+                            {item.poster_path ? (
+                                <img src={`${IMAGE_BASE_URL}${item.poster_path}`} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center"><Film className="w-4 h-4 text-slate-600" /></div>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h4 className="text-white text-sm font-medium truncate">{item.title || item.name}</h4>
+                            <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                                <span className="uppercase tracking-wider text-[10px] bg-white/10 px-1.5 py-0.5 rounded">{item.media_type === 'movie' ? 'Film' : 'Dizi'}</span>
+                                <span>{(item.release_date || item.first_air_date || '').split('-')[0]}</span>
+                                <span className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-500" /> {item.vote_average?.toFixed(1)}</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </form>
     const [searchResults, setSearchResults] = useState([]);
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -703,21 +794,7 @@ const App = () => {
                         <img src="/icon.png" alt="İzlenti" className="h-32 md:h-48 drop-shadow-[0_0_25px_rgba(6,182,212,0.6)] group-hover:scale-110 transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)" />
                     </div>
 
-                    <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
-                        <input
-                            type="text"
-                            placeholder="Film, Dizi, Oyuncu..."
-                            className="w-full bg-white/5 border border-white/10 rounded-full py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
-                        <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-500" />
-                        {query && (
-                            <button type="button" onClick={() => setQuery('')} className="absolute right-4 top-3.5 text-slate-500 hover:text-white transition">
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </form>
+
 
                     {/* Watchlist Button */}
                     <button
