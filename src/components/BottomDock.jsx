@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Heart, Sparkles, LayoutGrid } from 'lucide-react';
+import { Home, Heart, Sparkles, Film, Tv } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const BottomDock = () => {
@@ -7,16 +7,17 @@ const BottomDock = () => {
     const location = useLocation();
 
     const menuItems = [
-        { id: 'home', icon: <Home className="w-6 h-6" />, label: 'Ana Sayfa', path: '/' },
-        { id: 'search', icon: <Search className="w-6 h-6" />, label: 'Ara', path: '/search' },
-        { id: 'trending', icon: <Sparkles className="w-6 h-6" />, label: 'Gündem', path: '/category/trending' },
-        { id: 'watchlist', icon: <Heart className="w-6 h-6" />, label: 'Listem', path: '/watchlist' },
+        { id: 'home', icon: <Home className="w-5 h-5" />, label: 'Ana Sayfa', path: '/' },
+        { id: 'movie', icon: <Film className="w-5 h-5" />, label: 'Filmler', path: '/category/movie' },
+        { id: 'tv', icon: <Tv className="w-5 h-5" />, label: 'Diziler', path: '/category/tv' },
+        { id: 'trending', icon: <Sparkles className="w-5 h-5" />, label: 'Gündem', path: '/category/trending' },
+        { id: 'watchlist', icon: <Heart className="w-5 h-5" />, label: 'Listem', path: '/watchlist' },
     ];
 
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[95%] max-w-sm">
             {/* Glass Container - Windows 11 Style */}
-            <div className="bg-[#202020]/90 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex items-center justify-around p-3 gap-2 ring-1 ring-white/10">
+            <div className="bg-[#202020]/90 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex items-center justify-around p-2 gap-1 ring-1 ring-white/10">
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (

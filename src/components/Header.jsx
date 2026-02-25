@@ -61,20 +61,20 @@ const Header = ({ watchlistCount }) => {
     };
 
     return (
-        <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative pb-2 md:pb-0">
+        <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 md:gap-4">
                 {/* Logo */}
                 <div
-                    className="flex items-center cursor-pointer group -my-6 md:-my-10 relative z-50 order-1 perspective-1000 w-[120px] md:w-auto"
+                    className="flex items-center cursor-pointer group relative z-50 order-1 perspective-1000"
                     onClick={() => { setQuery(''); navigate('/'); }}
                 >
                     <img
                         src="/icon.png"
                         alt="İzlenti"
-                        className="h-36 md:h-48 drop-shadow-[0_20px_50px_rgba(6,182,212,0.9)] transition-all duration-500 transform hover:scale-110 hover:rotate-y-12 origin-left"
+                        className="h-12 md:h-16 drop-shadow-[0_10px_30px_rgba(6,182,212,0.8)] transition-all duration-500 transform hover:scale-[1.60] hover:rotate-y-12 origin-left scale-[1.35] md:scale-150 ml-2"
                         style={{
-                            filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.6))',
-                            transform: 'rotateX(10deg)'
+                            filter: 'drop-shadow(0 0 15px rgba(6,182,212,0.6))',
+                            transform: 'rotateX(5deg)'
                         }}
                     />
                 </div>
