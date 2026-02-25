@@ -3,6 +3,21 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Global error handler for debugging production
+window.onerror = function (message, source, lineno, colno, error) {
+  const errorDiv = document.createElement('div');
+  errorDiv.style.position = 'fixed';
+  errorDiv.style.top = '0';
+  errorDiv.style.left = '0';
+  errorDiv.style.width = '100%';
+  errorDiv.style.backgroundColor = 'red';
+  errorDiv.style.color = 'white';
+  errorDiv.style.padding = '20px';
+  errorDiv.style.zIndex = '9999';
+  errorDiv.innerText = `Global Error: ${message} at ${source}:${lineno}:${colno}`;
+  document.body.appendChild(errorDiv);
+};
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
