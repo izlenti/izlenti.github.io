@@ -61,17 +61,17 @@ const Header = ({ watchlistCount }) => {
     };
 
     return (
-        <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative">
-            <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+        <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 relative pb-2 md:pb-0">
+            <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 md:gap-4">
                 {/* Logo */}
                 <div
-                    className="flex items-center cursor-pointer group -my-4 md:-my-10 relative z-50 order-1 perspective-1000"
+                    className="flex items-center cursor-pointer group -my-6 md:-my-10 relative z-50 order-1 perspective-1000 w-[120px] md:w-auto"
                     onClick={() => { setQuery(''); navigate('/'); }}
                 >
                     <img
                         src="/icon.png"
                         alt="İzlenti"
-                        className="h-28 md:h-48 drop-shadow-[0_20px_50px_rgba(6,182,212,0.9)] transition-all duration-500 transform hover:scale-110 hover:rotate-y-12"
+                        className="h-36 md:h-48 drop-shadow-[0_20px_50px_rgba(6,182,212,0.9)] transition-all duration-500 transform hover:scale-110 hover:rotate-y-12 origin-left"
                         style={{
                             filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.6))',
                             transform: 'rotateX(10deg)'
@@ -80,11 +80,11 @@ const Header = ({ watchlistCount }) => {
                 </div>
 
                 {/* Instant Search Form */}
-                <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-1 max-w-xl relative group z-50 order-3 md:order-2 mt-2 md:mt-0">
+                <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-1 max-w-xl relative group z-50 order-3 md:order-2">
                     <input
                         type="text"
                         placeholder="Film, Dizi, Oyuncu..."
-                        className="w-full bg-white/5 border border-white/10 rounded-full py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
+                        className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 md:py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => query.length > 2 && setShowSuggestions(true)}
@@ -132,13 +132,13 @@ const Header = ({ watchlistCount }) => {
                 {/* Watchlist Button */}
                 <button
                     onClick={() => navigate('/watchlist')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition group relative order-2 md:order-3"
+                    className="flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition group relative order-2 md:order-3"
                     title="İzleme Listem"
                 >
-                    <Heart className="w-5 h-5 text-slate-400 group-hover:text-red-400" />
+                    <Heart className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-hover:text-red-400" />
                     <span className="hidden sm:inline text-sm text-slate-300">Listem</span>
                     {watchlistCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center">
                             {watchlistCount}
                         </span>
                     )}
