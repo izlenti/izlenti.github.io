@@ -1,7 +1,8 @@
 import React from 'react';
-import { Film, Star, Heart } from 'lucide-react';
+import { Film, Heart } from 'lucide-react';
 import { IMAGE_BASE_URL } from '../lib/constants.jsx';
 import { useNavigate } from 'react-router-dom';
+import { getAIBadge } from '../lib/utils';
 
 const MovieCard = ({ movie, toggleWatchlist, isInWatchlist }) => {
     const navigate = useNavigate();
@@ -41,13 +42,16 @@ const MovieCard = ({ movie, toggleWatchlist, isInWatchlist }) => {
                     <Heart className={`w-4 h-4 transition ${isAdded ? 'fill-red-500 text-red-500' : 'text-white'}`} />
                 </button>
 
-                {movie.vote_average > 8 && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-3 pt-8 flex items-end">
-                        <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold">
-                            <Star className="w-3 h-3 fill-yellow-400" /> {movie.vote_average.toFixed(1)}
+                {movie.vote_average > 0 && (() => {
+                    const badge = getAIBadge(movie.vote_average, movie.vote_count);
+                    return (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-3 pt-12 flex items-end">
+                            <div className={`flex items-center gap-1.5 ${badge.color} text-[11px] bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 shadow-lg`}>
+                                <span>{badge.icon}</span> <span>YZ: {badge.text}</span>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
             <div className="p-4 flex-1 flex flex-col justify-end bg-[#0f172a]">
                 <h3 className="font-bold text-sm text-slate-200 line-clamp-2 leading-tight group-hover:text-cyan-400 transition">{movie.title || movie.name}</h3>

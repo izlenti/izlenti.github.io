@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Film, Star, Heart } from 'lucide-react';
+import { Search, X, Film, Heart } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL } from '../lib/constants.jsx';
+import { getAIBadge } from '../lib/utils';
 
 const Header = ({ watchlistCount }) => {
     const navigate = useNavigate();
@@ -62,29 +63,29 @@ const Header = ({ watchlistCount }) => {
 
     return (
         <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 md:gap-4">
+            <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4">
                 {/* Logo */}
                 <div
-                    className="flex items-center cursor-pointer group relative z-50 order-1 perspective-1000"
+                    className="w-full md:w-auto flex items-center justify-center md:justify-start cursor-pointer group relative z-50 order-1 md:pr-32 lg:pr-48"
                     onClick={() => { setQuery(''); navigate('/'); }}
                 >
-                    <img
-                        src="/icon.png"
-                        alt="İzlenti"
-                        className="h-12 md:h-16 drop-shadow-[0_10px_30px_rgba(6,182,212,0.8)] transition-all duration-500 transform hover:scale-[1.60] hover:rotate-y-12 origin-left scale-[1.35] md:scale-150 ml-2"
-                        style={{
-                            filter: 'drop-shadow(0 0 15px rgba(6,182,212,0.6))',
-                            transform: 'rotateX(5deg)'
-                        }}
-                    />
+                    <div className="relative flex items-center justify-center">
+                        {/* Subtle glow behind the transparent logo */}
+                        <div className="absolute inset-0 bg-red-500/20 blur-xl md:blur-[30px] rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                        <img
+                            src="/logo.png"
+                            alt="İzlenti"
+                            className="relative z-10 h-10 sm:h-12 md:h-14 w-auto object-contain transition-all duration-500 transform scale-[2.5] sm:scale-[3] md:scale-[3.5] origin-center md:origin-left group-hover:scale-[2.6] sm:group-hover:scale-[3.1] md:group-hover:scale-[3.6] group-hover:brightness-110 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"
+                        />
+                    </div>
                 </div>
 
                 {/* Instant Search Form */}
-                <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-1 max-w-xl relative group z-50 order-3 md:order-2">
+                <form onSubmit={handleSearch} className="flex-1 w-full md:w-auto max-w-xl relative group z-50 order-2">
                     <input
                         type="text"
                         placeholder="Film, Dizi, Oyuncu..."
-                        className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 md:py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-full py-2.5 md:py-3 px-12 focus:outline-none focus:border-cyan-500 focus:bg-white/10 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm text-white placeholder:text-slate-500 shadow-inner"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => query.length > 2 && setShowSuggestions(true)}
@@ -120,7 +121,10 @@ const Header = ({ watchlistCount }) => {
                                         <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                                             <span className="uppercase tracking-wider text-[10px] bg-white/10 px-1.5 py-0.5 rounded">{item.media_type === 'movie' ? 'Film' : 'Dizi'}</span>
                                             <span>{(item.release_date || item.first_air_date || '').split('-')[0]}</span>
-                                            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-500" /> {item.vote_average?.toFixed(1)}</span>
+                                            {item.vote_average > 0 && (() => {
+                                                const badge = getAIBadge(item.vote_average, item.vote_count);
+                                                return <span className={`flex items-center gap-1 ${badge.color}`}><span>{badge.icon}</span> {badge.text}</span>;
+                                            })()}
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +136,7 @@ const Header = ({ watchlistCount }) => {
                 {/* Watchlist Button */}
                 <button
                     onClick={() => navigate('/watchlist')}
-                    className="flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition group relative order-2 md:order-3"
+                    className="w-auto flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl md:rounded-full transition group relative order-3"
                     title="İzleme Listem"
                 >
                     <Heart className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-hover:text-red-400" />

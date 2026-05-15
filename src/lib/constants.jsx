@@ -39,7 +39,7 @@ export const MOVIE_CATEGORIES = [
 
 export const TV_CATEGORIES = [
     // ✨ ÖZEL KATEGORİLER
-    { id: 'trending_tv', name: 'Gündemdekiler', icon: <TrendingUp className="text-orange-400" />, type: 'mixed', section: 'special', disableSort: true },
+    { id: 'trending_tv', name: 'Gündemdekiler', icon: <TrendingUp className="text-orange-400" />, type: 'tv', section: 'special', disableSort: true },
     { id: 'top_rated_tv', name: 'IMDb +8.5 (Efsaneler)', icon: <Star className="text-yellow-400" />, type: 'tv', section: 'special', params: '&vote_count.gte=1000&vote_average.gte=8.5', defaultSort: 'vote_average.desc' },
     { id: 'netflix', name: 'Netflix Dizileri', icon: <Tv className="text-red-500" />, type: 'tv', section: 'special', params: '&with_networks=213&vote_count.gte=300', defaultSort: 'popularity.desc' },
     { id: 'hbo', name: 'HBO Kalitesi', icon: <Award className="text-white" />, type: 'tv', section: 'special', params: '&with_networks=49&vote_count.gte=300', defaultSort: 'popularity.desc' },

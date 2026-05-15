@@ -43,6 +43,19 @@ export const translateText = async (text, sourceLang = 'en', targetLang = 'tr') 
     }
 };
 
+export const getAIBadge = (score, votes = 1000) => {
+    if (!score || score === 0) return { text: "Veri Yetersiz", color: "text-slate-500", badgeColor: "bg-slate-500/10 border-slate-500/20", icon: "📊" };
+    
+    let sysScore = score;
+    if (votes < 100) sysScore -= 1.5;
+    else if (votes < 500) sysScore -= 0.8;
+    
+    if (sysScore >= 8.0) return { text: "Sinematik Başarı", color: "text-amber-400 font-bold", badgeColor: "bg-amber-500/10 border-amber-500/20", icon: "💎" };
+    if (sysScore >= 6.8) return { text: "Nitelikli Yapım", color: "text-emerald-400 font-bold", badgeColor: "bg-emerald-500/10 border-emerald-500/20", icon: "🎯" };
+    if (sysScore >= 5.5) return { text: "Ortalama/Tartışmalı", color: "text-blue-400", badgeColor: "bg-blue-500/10 border-blue-500/20", icon: "⚖️" };
+    return { text: "Analitik Risk", color: "text-rose-400", badgeColor: "bg-rose-500/10 border-rose-500/20", icon: "⚠️" };
+};
+
 // --- İZLEYİCİ ODAKLI AI ANALİZ MOTORU (NARRATİF SİMÜLASYONU) ---
 export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaType) => {
     const isTv = mediaType === 'tv';
@@ -102,38 +115,58 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
 
     let verdict, verdictIcon, verdictClass, verdictReason, prosAndCons, targetAudience, finalWord;
 
-    if (score >= 8.5) {
-        verdict = isTv ? "Efsanevi Yapım" : "Başyapıt";
-        verdictIcon = "👑";
+    let reliability = "Yüksek";
+    let scoreAdjustment = 0;
+    
+    if (votes < 50) {
+        reliability = "Çok Düşük";
+        scoreAdjustment = -1.5;
+    } else if (votes < 300) {
+        reliability = "Düşük";
+        scoreAdjustment = -0.8;
+    } else if (votes < 1000) {
+        reliability = "Orta";
+        scoreAdjustment = -0.3;
+    }
+    
+    const effectiveScore = score + scoreAdjustment;
+
+    if (effectiveScore >= 8.0) {
+        verdict = isTv ? "Üst Düzey Dizi" : "Sinematik Başarı";
+        verdictIcon = "💎";
         verdictClass = "from-amber-600 to-yellow-500";
-        verdictReason = "Geniş kitleler tarafından tam not almış, eksik yönleri neredeyse göz ardı edilebilecek düzeyde, türünün en iyi örneklerinden biri.";
-        prosAndCons = "✅ Etkileyici senaryo ve derinlik\n✅ Üst düzey prodüksiyon kalitesi\n✅ Başarılı oyunculuklar\n❌ Yok denecek kadar az zayıf yön";
-        targetAudience = "Herkes Sinema/Dizi tutkunları için kaçırılmaması gereken bir deneyim.";
-        finalWord = "İzleme listenizin en üst sırasına tereddüt etmeden ekleyebilirsiniz.";
-    } else if (score >= 7.5) {
-        verdict = "Kesinlikle İzlenmeli";
-        verdictIcon = "🌟";
+        verdictReason = "Teknik işçiliği, senaryo bütünlüğü ve oyunculuk performanslarıyla kendi türünde standartları belirleyen, objektif olarak başarılı bir yapım.";
+        prosAndCons = "✅ Tutarlı ve derinlikli karakter gelişimi\n✅ Güçlü sinematografi ve kurgu\n✅ Tatmin edici hikaye anlatımı\n❌ Öznel beklentiler dışında majör bir teknik hata yok";
+        targetAudience = { title: "Kalite Arayanlar", desc: "Sinematik anlamda yüksek standartları önemseyen seçici izleyiciler." };
+        finalWord = "Teknik ve anlatısal olarak rüştünü ispatlamış objektif bir başarı.";
+    } else if (effectiveScore >= 6.8) {
+        verdict = "Nitelikli Yapım";
+        verdictIcon = "🎯";
         verdictClass = "from-emerald-500 to-teal-400";
-        verdictReason = "Sağlam bir hikaye örgüsü ve tatmin edici bir final sunan, izledikten sonra pişman etmeyecek kaliteli bir yapım.";
-        prosAndCons = "✅ Sürükleyici hikaye\n✅ Tatmin edici karakter gelişimi\n❌ Zaman zaman yavaşlayan tempo";
-        targetAudience = "Türün Meraklıları Kaliteli işler arayan ve bu türe ilgi duyan seyirciler.";
-        finalWord = "Vakit ayırdığınıza değecek, keyifli ve sürükleyici bir seyir zevki sunuyor.";
-    } else if (score >= 6.0) {
-        verdict = "Şans Verilebilir";
-        verdictIcon = "👍";
+        verdictReason = "Belirli senaryo formüllerine dayansa da, prodüksiyon kalitesi ve izleyiciyi tutma becerisiyle genel geçer izleyici testini geçmeyi başaran sağlam bir iş.";
+        prosAndCons = "✅ Türünün gereksinimlerini başarıyla karşılıyor\n✅ Akıcı ilerleyen kurgu\n❌ Orijinallik açısından çığır açmıyor\n❌ Bazı yan karakterler zayıf kalabiliyor";
+        targetAudience = { title: "Türün Sevenleri", desc: "Bu konsepte özel ilgisi olan ve risk almadan vakit geçirmek isteyenler." };
+        finalWord = "Büyük beklentilere girmeden izlendiğinde, sunduğu teknik yeterlilikle vaktinizin karşılığını veren bir tercih.";
+    } else if (effectiveScore >= 5.5) {
+        verdict = "Ortalama / Tartışmalı";
+        verdictIcon = "⚖️";
         verdictClass = "from-blue-500 to-cyan-400";
-        verdictReason = "Bazı eksikleri ve mantık hataları barındırsa da, boş zaman değerlendirmek için tercih edilebilecek ortalama üstü bir iş.";
-        prosAndCons = "✅ Eğlenceli anlar\n✅ Fena olmayan görsel kalite\n❌ Klişe ilerleyen senaryo\n❌ Yetersiz karakter derinliği";
-        targetAudience = "Klişe Sevenler Çerezlik yapım arayan, fazla mantık aramayan izleyiciler.";
-        finalWord = "Beklentiyi çok yükseltmeden, sakin kafayla izlendiğinde keyif verebilir.";
+        verdictReason = "Teknik veya senaryo anlamında bariz kusurlar barındıran; ancak içerdiği bazı sekanslar veya spesifik performanslarla izleyiciyi ikiye bölen bir yapım.";
+        prosAndCons = "✅ Kısmi anlarda parlayan fikirler\n✅ Belirli sahnelerde iyi atmosfer\n❌ Hikayede ritim ve mantık problemleri\n❌ Derinlikten yoksun olay örgüsü";
+        targetAudience = { title: "Boş Vakit İzleyicisi", desc: "Arka planda akıp gitsin diyen veya spesifik bir oyuncu için katlananlar." };
+        finalWord = "Objektif olarak pek çok eksiği mevcut. Ancak türün ciddi bir hayranıysanız şans verilebilir.";
     } else {
-        verdict = "Zaman Kaybı Olabilir";
+        verdict = "Analitik Risk";
         verdictIcon = "⚠️";
         verdictClass = "from-red-500 to-rose-400";
-        verdictReason = "Senaryo boşlukları, zayıf oyunculuklar veya düşük prodüksiyon kalitesi nedeniyle izleyiciden geçer not alamamış bir yapım.";
-        prosAndCons = "✅ Bazı ilginç potansiyel fikirler\n❌ Kötü işlenmiş kurgu\n❌ Tatmin etmeyen final\n❌ Sıkıcı anlatım";
-        targetAudience = "Seçici Olmayanlar Arka planda ses olsun diye bir şeyler açmak isteyenler.";
-        finalWord = "Sadece merakınıza yenik düşerseniz göz atın, aksi halde pas geçebilirsiniz.";
+        verdictReason = "İzleyici verileri ve teknik analizler ışığında; zayıf kurgu, kopuk senaryo ve yetersiz prodüksiyon gibi majör temel problemleri olan riskli bir proje.";
+        prosAndCons = "✅ Kağıt üzerinde fena durmayan başlangıç fikri\n❌ Zayıf yönetim ve kötü işlenmiş metin\n❌ İzleyiciyi içine çekemeyen tempo\n❌ Tatmin hissi yaratmayan sığ final";
+        targetAudience = { title: "Pas Geçenler", desc: "Kısıtlı vaktini kanıtlanmış, kaliteli yapımlara ayırmak isteyen seçici izleyiciler." };
+        finalWord = "Projeye özel bir bağınız yoksa, algoritmanın verileri doğrultusunda alternatiflere yönelmeniz rasyonel olacaktır.";
+    }
+
+    if (reliability === "Çok Düşük" || reliability === "Düşük") {
+        verdictReason += ` (Not: Veri sayısının azlığı sebebiyle bu istatistiksel analiz yanıltıcı olabilir. Güvenilirlik: ${reliability})`;
     }
 
     if (isUnreleased) {
@@ -142,8 +175,21 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         verdictClass = "from-purple-500 to-fuchsia-400";
         verdictReason = "Henüz yayınlanmamış olmasına rağmen büyük bir beklenti ve merak oluşturan bir proje.";
         prosAndCons = "❓ Potansiyeli yüksek\n❓ Kapalı kutu";
-        targetAudience = `Meraklı Bekleyenler ${termCap} dünyasını yakından takip edenler.`;
+        targetAudience = { title: "Meraklı Bekleyenler", desc: `${termCap} dünyasını yakından takip edenler.` };
         finalWord = "Vizyon/Yayın tarihini not alıp beklemeye geçebilirsiniz.";
+    }
+
+    // --- 0. EPIC SYNOPSIS (Yapay Zeka Dokunuşlu Özet) ---
+    let epicSynopsis = { text: overview || "Bu yapım hakkında detaylı bir konu özeti bulunmuyor.", aiTouch: "" };
+    if (overview.length > 20) {
+        let touch = isDark ? `İzleyiciyi karanlık ve gerilimli bir atmosfere çeken bu yapım, ` : (isLight ? `Sıcak ve eğlenceli kurgusuyla öne çıkarak, ` : `Karakterlerin içsel çatışmalarını güçlü bir şekilde hissettirerek, `);
+        touch += `özellikle ${genres.slice(0, 2).join(" ve ")} dinamiklerini harmanlıyor. `;
+        if (keywords.length > 0) {
+            touch += `Alt metinlerinde yatan ${keywords.slice(0, 3).map(k => k.name).join(", ")} gibi temalar hikayeyi çok daha katmanlı bir boyuta taşıyor.`;
+        }
+        epicSynopsis.aiTouch = touch;
+    } else {
+        epicSynopsis.aiTouch = `Detaylı bir özet bulunmasa da, YZ analizlerimize göre ${genres.slice(0, 2).join(" ve ")} odaklı yapısı ve sunduğu ${isDark ? 'gerilimli' : (isLight ? 'eğlenceli' : 'derin')} atmosfer ile radarınızda olması gereken bir ${termCap}.`;
     }
 
     // --- 1. ANA ANALİZ METNİ (Narrative Body) ---
@@ -214,6 +260,67 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
     if (isUnreleased) matchScore = 50;
     const matchRate = Math.floor(matchScore);
 
+    // --- BÜTÇE-HASILAT ANALİZİ ---
+    let budgetAnalysis = null;
+    if (!isTv && budget > 0) {
+        const revenue = details.revenue || 0;
+        const roi = revenue > 0 ? ((revenue - budget) / budget * 100).toFixed(0) : null;
+        let budgetVerdict = '';
+        if (revenue === 0) budgetVerdict = 'Hasılat verisi henüz mevcut değil.';
+        else if (roi > 200) budgetVerdict = `Gişe canavarı! Bütçesinin ${(revenue / budget).toFixed(1)}x katını kazandı. Prodüksiyon şirketinin rüyası.`;
+        else if (roi > 50) budgetVerdict = `Ticari olarak başarılı. Yatırımın karşılığını fazlasıyla aldı.`;
+        else if (roi > 0) budgetVerdict = `Maliyetini zar zor çıkardı. Pazarlama masrafları dahil edilince kâr marjı tartışmalı.`;
+        else budgetVerdict = `Gişede hayal kırıklığı. Bütçesini bile karşılayamadı.`;
+        budgetAnalysis = {
+            budget, revenue, roi: roi ? `%${roi}` : null, verdict: budgetVerdict,
+            budgetFormatted: `$${(budget / 1_000_000).toFixed(0)}M`,
+            revenueFormatted: revenue > 0 ? `$${(revenue / 1_000_000).toFixed(0)}M` : 'Bilinmiyor'
+        };
+    }
+
+    // --- SEZON BİLGİSİ (DİZİLER) ---
+    let seasonInfo = null;
+    if (isTv) {
+        seasonInfo = {
+            seasons: details.number_of_seasons || 0,
+            episodes: details.number_of_episodes || 0,
+            status: details.status,
+            statusTr: details.status === 'Returning Series' ? '📺 Devam Ediyor' :
+                       details.status === 'Ended' ? '🏁 Final Yaptı' :
+                       details.status === 'Canceled' ? '❌ İptal Edildi' :
+                       details.status === 'In Production' ? '🎬 Yapım Aşamasında' : (details.status || 'Bilinmiyor'),
+            inProduction: details.in_production || false
+        };
+    }
+
+    // --- KADRO ANALİZİ ---
+    const topCast = credits?.cast?.slice(0, 6).map(c => ({ name: c.name, character: c.character, profile: c.profile_path })) || [];
+    let castAnalysis = '';
+    if (director && mainStar) castAnalysis = `${director} yönetmenliğinde, ${mainStar}'ın başrolde yer aldığı kadro, projenin omurgasını oluşturuyor.`;
+    else if (mainStar) castAnalysis = `${mainStar} önderliğindeki kadro hikayeyi taşıyor.`;
+
+    // --- NE ZAMAN İZLENMELİ ---
+    let watchTiming = { icon: '🌙', title: 'Akşam Keyfi', desc: 'Günün yorgunluğunu atmak için ideal.' };
+    if (isDark) watchTiming = { icon: '🌑', title: 'Gece Geç Saatler', desc: 'Karanlık atmosfer için geceyi bekleyin. Kulaklık tavsiye edilir.' };
+    else if (isLight && genres.some(g => ['Komedi', 'Aile'].includes(g))) watchTiming = { icon: '👨‍👩‍👧‍👦', title: 'Aile/Arkadaş Buluşması', desc: 'Birlikte keyifle izlenebilecek hafif bir yapım.' };
+    else if (runtime > 150) watchTiming = { icon: '☕', title: 'Boş Bir Pazar Günü', desc: 'Uzun bir yapım — rahatça oturup izleyebileceğiniz geniş bir zaman dilimi ayırın.' };
+    else if (score >= 8) watchTiming = { icon: '🎬', title: 'Sinema Gecesi', desc: 'Kaliteli bir deneyim için ışıkları kapatın, sesi açın.' };
+
+    // --- TEKRAR İZLEME DEĞERİ ---
+    let rewatchValue = { score: 5, label: 'Orta', icon: '🔄' };
+    if (score >= 8.5 && votes > 5000) rewatchValue = { score: 9, label: 'Çok Yüksek', icon: '💎' };
+    else if (score >= 7.5) rewatchValue = { score: 7, label: 'Yüksek', icon: '👍' };
+    else if (score < 5.5) rewatchValue = { score: 2, label: 'Düşük', icon: '👎' };
+
+    // --- TÜR-ÖZEL TEMATİK YORUM ---
+    let thematicInsight = '';
+    const genreSet = new Set(genres);
+    if (genreSet.has('Bilim Kurgu') && genreSet.has('Dram')) thematicInsight = 'İnsanlık durumunu bilim kurgu prizmasından sorgulayan felsefi bir yapım.';
+    else if (genreSet.has('Korku') && genreSet.has('Gerilim')) thematicInsight = 'Hem psikolojik gerilim hem de korku unsurlarıyla dolu, kalp atışınızı hızlandıracak bir deneyim.';
+    else if (genreSet.has('Komedi') && genreSet.has('Romantik')) thematicInsight = 'Gülümseten romantizm ve eğlenceli diyaloglarla dolu, keyifli bir izleme deneyimi.';
+    else if (genreSet.has('Aksiyon') && genreSet.has('Macera')) thematicInsight = 'Nefes kesen aksiyon sekansları ve epik macera sahneleriyle dolu bir adrenalin bombardımanı.';
+    else if (genreSet.has('Belgesel')) thematicInsight = 'Gerçek dünyadan hikayeler anlatan, bakış açınızı genişletecek bilgi dolu bir yapım.';
+
     return {
         verdict, verdictIcon, verdictClass, verdictReason,
         prosAndCons,
@@ -221,7 +328,9 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         recentReview: reviews[0], targetAudience,
         finalWord,
         score, votes, term, termCap, originalTitle, localTitle, genres, runtime, reviewCount, isUnreleased,
-        psychProfile, matchRate // New Fields
+        psychProfile, matchRate, epicSynopsis,
+        budgetAnalysis, seasonInfo, topCast, castAnalysis,
+        watchTiming, rewatchValue, thematicInsight
     };
 };
 
@@ -264,4 +373,40 @@ export const getExternalLinks = (details, type) => {
         awards: awardLink,
         wikipedia: `https://en.wikipedia.org/wiki/${encodeURIComponent(originalTitle.replace(/ /g, '_'))}`
     };
+};
+
+// --- TÜRKÇE TARİH FORMATLAMA ---
+const TR_MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+export const formatTurkishDate = (dateStr) => {
+    if (!dateStr) return 'Bilinmiyor';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${d.getDate()} ${TR_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+// --- YAYIN DURUMU ---
+export const getReleaseStatus = (details, type) => {
+    const isTv = type === 'tv';
+    const releaseDate = details.release_date || details.first_air_date;
+    const now = new Date();
+    const relDate = releaseDate ? new Date(releaseDate) : null;
+
+    if (isTv) {
+        const status = details.status;
+        if (status === 'Returning Series') return { label: 'Devam Ediyor', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', icon: '📺' };
+        if (status === 'Ended') return { label: 'Final Yaptı', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: '🏁' };
+        if (status === 'Canceled') return { label: 'İptal Edildi', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', icon: '❌' };
+        if (status === 'In Production') return { label: 'Yapım Aşamasında', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: '🎬' };
+        if (status === 'Planned') return { label: 'Planlanıyor', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', icon: '📋' };
+        return { label: status || 'Bilinmiyor', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: '❓' };
+    }
+
+    if (!relDate) return { label: 'Tarih Bilinmiyor', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: '❓' };
+    if (relDate > now) {
+        return { label: `Vizyon: ${formatTurkishDate(releaseDate)}`, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', icon: '⏳' };
+    }
+    const diffDays = Math.floor((now - relDate) / (1000 * 60 * 60 * 24));
+    if (diffDays < 60) return { label: 'Yeni Vizyonda', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20', icon: '🎬' };
+    return { label: 'Yayınlandı', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', icon: '✅' };
 };

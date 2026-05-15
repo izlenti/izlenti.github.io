@@ -5,7 +5,7 @@ import {
     Brain, ThumbsUp, ChevronRight, Loader2
 } from 'lucide-react';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL, BACKDROP_BASE_URL, LOGO_BASE_URL } from '../lib/constants.jsx';
-import { generateDeepAnalysis, translateText, getExternalLinks } from '../lib/utils';
+import { generateDeepAnalysis, translateText, getExternalLinks, getAIBadge, getReleaseStatus, formatTurkishDate } from '../lib/utils';
 
 const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
     const { type, id } = useParams(); // Expected route: /:type/:id
@@ -56,19 +56,9 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 const trailers = videosData.results?.filter(v => v.site === 'YouTube' && v.type === 'Trailer') || [];
                 setTrailerKey(trailers.length > 0 ? trailers[0].key : null);
 
-                // Translate reviews (limit to 5)
-                const translatedReviews = await Promise.all(
-                    reviews.slice(0, 5).map(async (review) => {
-                        const content = review.content || '';
-                        const hasTurkishChars = /[çşğüöıİ]/.test(content);
-                        if (!hasTurkishChars && content.length > 20) {
-                            const translatedContent = await translateText(content, 'en', 'tr');
-                            return { ...review, originalContent: content, content: translatedContent, isTranslated: true };
-                        }
-                        return review;
-                    })
-                );
-                reviews = translatedReviews;
+                // Yorumlar artık ekranda gösterilmediği için çeviri işlemine gerek yok,
+                // bunu kaldırmak sayfa yükleme hızını da artırır.
+                reviews = [];
 
                 // Providers
                 const trProviders = providersData.results?.TR;
@@ -222,15 +212,24 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 </p>
                             )}
                             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300 font-medium">
-                                <span className="bg-white/10 border border-white/10 px-3 py-1 rounded-md">{(movie.release_date || movie.first_air_date || '').substring(0, 4)}</span>
+                                <span className="bg-white/10 border border-white/10 px-3 py-1 rounded-md" title={formatTurkishDate(movie.release_date || movie.first_air_date)}>{formatTurkishDate(movie.release_date || movie.first_air_date)}</span>
                                 <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-md border border-white/5"><Clock className="w-3.5 h-3.5 text-cyan-400" /> {movie.runtime || (movie.episode_run_time ? movie.episode_run_time[0] : '?')} dk</span>
+                                {(() => { const rs = getReleaseStatus(movie, type); return (<span className={`flex items-center gap-1.5 px-3 py-1 rounded-md border ${rs.bg} ${rs.color} font-bold text-xs`}>{rs.icon} {rs.label}</span>); })()}
                                 {!analysis.isUnreleased && (
-                                    <span className="flex items-center gap-1.5 bg-yellow-500/10 px-3 py-1 rounded-md border border-yellow-500/20" title="İzleyici Oyu">
-                                        <Heart className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                                        {movie.vote_count?.toLocaleString()} oy
+                                    <span className="flex items-center gap-1.5 bg-cyan-500/10 px-3 py-1 rounded-md border border-cyan-500/20" title="Yapay Zeka Onayı">
+                                        <Brain className="w-3.5 h-3.5 text-cyan-400" />
+                                        Yapay Zeka Analizli
                                     </span>
                                 )}
                             </div>
+                            {/* Sezon/Bölüm Bilgisi (Diziler) */}
+                            {analysis.seasonInfo && (
+                                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                                    <span className="bg-purple-500/10 border border-purple-500/20 text-purple-300 px-2.5 py-1 rounded-md font-bold">{analysis.seasonInfo.seasons} Sezon</span>
+                                    <span className="bg-white/5 border border-white/5 text-slate-400 px-2.5 py-1 rounded-md">{analysis.seasonInfo.episodes} Bölüm</span>
+                                    <span className={`px-2.5 py-1 rounded-md font-bold border ${analysis.seasonInfo.statusTr.includes('Devam') ? 'bg-green-500/10 border-green-500/20 text-green-400' : analysis.seasonInfo.statusTr.includes('İptal') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>{analysis.seasonInfo.statusTr}</span>
+                                </div>
+                            )}
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {movie.genres?.map(g => (
                                     <span key={g.id} className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded">{g.name}</span>
@@ -238,21 +237,41 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                             </div>
                         </div>
 
+                        {/* Özet (Üstte, Öne Çıkarılmış) */}
+                        <div className="relative bg-gradient-to-br from-white/5 to-transparent p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+                            <div className="absolute -left-[1px] top-6 bottom-6 w-1 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-r-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                                <Film className="w-40 h-40 text-white" />
+                            </div>
+                            <h3 className="text-cyan-400 font-black uppercase text-xs tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                                📖 Hikaye & Konu Özeti
+                            </h3>
+                            <div className="relative z-10 space-y-5">
+                                <p className="text-slate-100 leading-relaxed font-light text-lg md:text-[1.15rem] md:leading-[1.8] drop-shadow-sm italic">
+                                    "{analysis.epicSynopsis.text}"
+                                </p>
+                                <div className="p-4 bg-cyan-950/40 border border-cyan-500/20 rounded-2xl flex flex-col md:flex-row items-start gap-4 shadow-inner">
+                                    <div className="bg-cyan-500/20 p-2.5 rounded-xl shrink-0"><Brain className="w-6 h-6 text-cyan-400" /></div>
+                                    <p className="text-cyan-100 text-sm md:text-[0.95rem] leading-relaxed">
+                                        <strong className="text-cyan-400 tracking-wide uppercase text-[10px] mb-1 block">Yapay Zeka Perspektifi</strong>
+                                        {analysis.epicSynopsis.aiTouch}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="space-y-6">
                             {/* ANA VERDİKT */}
-                            <div className={`bg-gradient-to-r ${analysis.verdictClass} p-6 rounded-2xl shadow-2xl text-center relative overflow-hidden`}>
+                            <div className={`bg-gradient-to-r ${analysis.verdictClass} p-5 md:p-6 rounded-2xl shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-center gap-4`}>
                                 <div className="absolute inset-0 bg-black/20"></div>
-                                <div className="relative z-10">
-                                    <div className="text-5xl mb-2">{analysis.verdictIcon}</div>
-                                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">{analysis.verdict}</h2>
-                                    <div className="mt-3 flex items-center justify-center gap-3 text-white/80 text-sm">
-                                        <span>•</span>
-                                        <span>{analysis.votes?.toLocaleString()} oy</span>
+                                <div className="relative z-10 flex items-center gap-4">
+                                    <div className="text-5xl">{analysis.verdictIcon}</div>
+                                    <div className="text-left">
+                                        <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">{analysis.verdict}</h2>
                                         {analysis.runtime > 0 && (
-                                            <>
-                                                <span>•</span>
-                                                <span>{analysis.runtime} dk</span>
-                                            </>
+                                            <div className="text-white/80 text-sm font-medium mt-1">
+                                                Süre: {analysis.runtime} dk
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -270,18 +289,21 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 </div>
 
                                 {/* HEDEF KİTLE */}
-                                <div className="flex gap-4 relative z-10 bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <div className="text-2xl">{analysis.targetAudience?.split(' ')[0]}</div>
-                                    <p className="text-slate-300 text-sm leading-relaxed">{analysis.targetAudience?.substring(analysis.targetAudience.indexOf(' ') + 1)}</p>
+                                <div className="flex gap-4 relative z-10 bg-white/5 p-4 rounded-xl border border-white/10 items-start">
+                                    <div className="text-3xl bg-black/20 p-2 rounded-lg">🎯</div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white mb-1">{analysis.targetAudience?.title}</h4>
+                                        <p className="text-slate-300 text-sm leading-relaxed">{analysis.targetAudience?.desc}</p>
+                                    </div>
                                 </div>
 
                                 {/* --- YENİ AI ÖZELLİKLERİ --- */}
 
-                                {/* 1. SİNİRSEL EŞLEŞME (Neural Match) */}
+                                {/* 1. YZ İZLEYİCİ SKORU (Audience Score) */}
                                 <div className="relative z-10 bg-slate-900/50 p-4 rounded-xl border border-cyan-500/30">
                                     <div className="flex justify-between items-end mb-2">
                                         <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                                            <Brain className="w-4 h-4" /> Sinirsel Eşleşme
+                                            <Brain className="w-4 h-4" /> YZ İzleyici Skoru
                                         </h4>
                                         <span className="text-2xl font-black text-cyan-300">{analysis.matchRate}%</span>
                                     </div>
@@ -293,7 +315,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                             <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-slate-500 mt-2 text-right">Kitle beğenisi ve viral etki analizi</p>
+                                    <p className="text-[10px] text-slate-500 mt-2 text-right">Dünya genelindeki izleyici reaksiyonlarının AI tabanlı analizi</p>
                                 </div>
 
                                 {/* 2. PSİKOLOJİK PROFİL */}
@@ -321,64 +343,55 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                     <div className="text-slate-200 leading-relaxed text-sm whitespace-pre-line">{analysis.prosAndCons}</div>
                                 </div>
 
-                                {/* İZLEYİCİ YORUMLARI */}
-                                <div className="relative z-10 border-t border-white/10 pt-6 space-y-6">
-                                    <div className="flex gap-4">
-                                        <div className="min-w-[4px] bg-gradient-to-b from-cyan-500 to-purple-500 rounded-full self-stretch"></div>
-                                        <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-line">{analysis.reviewAnalysis}</div>
-                                    </div>
-
-                                    {/* Expandable Recent Review */}
-                                    {analysis.recentReview && (analysis.recentReview.content || analysis.recentReview.originalContent) && (
-                                        <div className="bg-black/20 p-4 rounded-xl border border-white/5">
-                                            <div className="flex items-center gap-2 mb-2 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                                <span>📝 Son Yorum</span>
-                                                {analysis.recentReview.author_details?.rating && (
-                                                    <span className="text-yellow-500">• {analysis.recentReview.author_details.rating}/10</span>
-                                                )}
-                                            </div>
-                                            <div className="text-slate-300 text-sm leading-relaxed relative">
-                                                <p className={`${expandedReviews[movie.id] ? '' : 'line-clamp-4'}`}>
-                                                    {analysis.recentReview.content}
-                                                </p>
-
-                                                {(analysis.recentReview.content.length > 200) && (
-                                                    <button
-                                                        onClick={() => setExpandedReviews(prev => ({ ...prev, [movie.id]: !prev[movie.id] }))}
-                                                        className="mt-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1"
-                                                    >
-                                                        {expandedReviews[movie.id] ? 'Daha Az Göster' : 'Daha Fazla Göster'}
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {/* Original Language Toggle */}
-                                            {analysis.recentReview.isTranslated && analysis.recentReview.originalContent && (
-                                                <details className="mt-4 group">
-                                                    <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-300 transition list-none">
-                                                        Orijinal Dilde Göster (English)
-                                                    </summary>
-                                                    <p className="mt-2 text-xs text-slate-400 italic">
-                                                        "{analysis.recentReview.originalContent}"
-                                                    </p>
-                                                </details>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
                                 {/* SON SÖZ */}
-                                <div className="relative z-10 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-5 rounded-xl border border-cyan-500/20">
-                                    <p className="text-cyan-200 text-base font-medium">💬 {analysis.finalWord}</p>
+                                <div className="relative z-10 border-t border-white/10 pt-6">
+                                    <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-5 rounded-xl border border-cyan-500/20">
+                                        <p className="text-cyan-200 text-base font-medium">💬 {analysis.finalWord}</p>
+                                    </div>
                                 </div>
                             </div>
+
+                                {/* BÜTÇE-HASILAT (Filmler) */}
+                                {analysis.budgetAnalysis && (
+                                    <div className="relative z-10 bg-white/5 p-4 rounded-xl border border-white/10">
+                                        <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">📊 Bütçe & Hasılat</h4>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div className="bg-black/20 p-3 rounded-lg text-center"><div className="text-[10px] text-slate-500 uppercase mb-1">Bütçe</div><div className="text-white font-black text-lg">{analysis.budgetAnalysis.budgetFormatted}</div></div>
+                                            <div className="bg-black/20 p-3 rounded-lg text-center"><div className="text-[10px] text-slate-500 uppercase mb-1">Hasılat</div><div className="text-white font-black text-lg">{analysis.budgetAnalysis.revenueFormatted}</div></div>
+                                        </div>
+                                        {analysis.budgetAnalysis.roi && <div className="text-xs text-cyan-300 font-bold mb-1">ROI: {analysis.budgetAnalysis.roi}</div>}
+                                        <p className="text-xs text-slate-400">{analysis.budgetAnalysis.verdict}</p>
+                                    </div>
+                                )}
+
+                                {/* NE ZAMAN İZLENMELİ */}
+                                <div className="relative z-10 bg-white/5 p-4 rounded-xl border border-white/10 flex items-start gap-3">
+                                    <div className="text-3xl bg-black/20 p-2 rounded-lg">{analysis.watchTiming.icon}</div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white mb-1">Ne Zaman İzlenmeli?</h4>
+                                        <div className="text-cyan-400 font-bold text-xs mb-1">{analysis.watchTiming.title}</div>
+                                        <p className="text-slate-400 text-xs">{analysis.watchTiming.desc}</p>
+                                    </div>
+                                </div>
+
+                                {/* TEKRAR İZLEME DEĞERİ */}
+                                <div className="relative z-10 bg-white/5 p-4 rounded-xl border border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-2xl">{analysis.rewatchValue.icon}</div>
+                                        <div><div className="text-xs text-slate-500 uppercase tracking-wider">Tekrar İzleme Değeri</div><div className="text-white font-bold">{analysis.rewatchValue.label}</div></div>
+                                    </div>
+                                    <div className="flex gap-1">{[...Array(10)].map((_, i) => <div key={i} className={`w-2 h-4 rounded-sm ${i < analysis.rewatchValue.score ? 'bg-cyan-500' : 'bg-white/10'}`} />)}</div>
+                                </div>
+
+                                {/* TEMATİK İÇGÖRÜ */}
+                                {analysis.thematicInsight && (
+                                    <div className="relative z-10 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 p-4 rounded-xl border border-purple-500/20">
+                                        <p className="text-purple-200 text-sm italic">🎭 {analysis.thematicInsight}</p>
+                                    </div>
+                                )}
                         </div>
 
-                        {/* Özet */}
-                        <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/5 shadow-lg">
-                            <h3 className="text-slate-500 font-bold uppercase text-xs tracking-widest mb-3">Konu Özeti</h3>
-                            <p className="text-slate-300 leading-relaxed font-light text-lg">{movie.overview || "Özet bulunamadı."}</p>
-                        </div>
+
 
                         {/* LINKS */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -425,10 +438,14 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                         </div>
                                     </div>
                                     <h4 className="text-sm font-bold text-slate-300 group-hover:text-white truncate">{item.title || item.name}</h4>
-                                    <div className="flex items-center gap-1 text-xs text-slate-500">
-                                        <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                                        {item.vote_average?.toFixed(1) || '?'}
-                                    </div>
+                                    {item.vote_average > 0 && (() => {
+                                        const badge = getAIBadge(item.vote_average);
+                                        return (
+                                            <div className={`flex items-center gap-1 text-xs ${badge.color}`}>
+                                                <span>{badge.icon}</span> {badge.text}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             ))}
                         </div>

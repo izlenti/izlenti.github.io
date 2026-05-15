@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { PlayCircle, Info, Star } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { PlayCircle, Info, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TMDB_API_KEY, TMDB_BASE_URL, BACKDROP_BASE_URL } from '../lib/constants.jsx';
 
@@ -8,9 +7,7 @@ const HeroSlider = () => {
     const navigate = useNavigate();
     const [trending, setTrending] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [direction, setDirection] = useState(0);
-    const [touchStart, setTouchStart] = useState(null);
-    const [touchEnd, setTouchEnd] = useState(null);
+    const scrollContainerRef = useRef(null);
 
     useEffect(() => {
         const fetchTrending = async () => {
@@ -28,174 +25,120 @@ const HeroSlider = () => {
         fetchTrending();
     }, []);
 
-    const paginate = (newDirection) => {
-        setDirection(newDirection);
-        setCurrentIndex((prev) => (prev + newDirection + trending.length) % trending.length);
+    // Scroll listener to update dots
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const scrollLeft = scrollContainerRef.current.scrollLeft;
+        const width = scrollContainerRef.current.offsetWidth;
+        const newIndex = Math.round(scrollLeft / width);
+        if (newIndex !== currentIndex && newIndex >= 0 && newIndex < trending.length) {
+            setCurrentIndex(newIndex);
+        }
+    };
+
+    const scrollTo = (index) => {
+        if (!scrollContainerRef.current || index < 0 || index >= trending.length) return;
+        const width = scrollContainerRef.current.offsetWidth;
+        scrollContainerRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
+        setCurrentIndex(index);
     };
 
     useEffect(() => {
         if (trending.length === 0) return;
         const interval = setInterval(() => {
-            paginate(1);
+            scrollTo((currentIndex + 1) % trending.length);
         }, 8000);
         return () => clearInterval(interval);
-    }, [trending]);
-
-    // Swipe Logic
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
-    };
-
-    const onTouchMove = (e) => {
-        setTouchEnd(e.targetTouches[0].clientX);
-    };
-
-    const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-
-        if (isLeftSwipe) {
-            paginate(1);
-        }
-        if (isRightSwipe) {
-            paginate(-1);
-        }
-    };
+    }, [trending, currentIndex]);
 
     if (trending.length === 0) return null;
 
-    const currentMovie = trending[currentIndex];
-
-    // Animation Variants
-    const slideVariants = {
-        enter: (direction) => ({
-            x: direction > 0 ? 1000 : -1000,
-            opacity: 0,
-            scale: 0.95
-        }),
-        center: {
-            zIndex: 1,
-            x: 0,
-            opacity: 1,
-            scale: 1
-        },
-        exit: (direction) => ({
-            zIndex: 0,
-            x: direction < 0 ? 1000 : -1000,
-            opacity: 0,
-            scale: 0.95
-        })
-    };
-
-    const swipeHandlers = {
-        onTouchStart,
-        onTouchMove,
-        onTouchEnd
-    };
-
     return (
-        <div
-            className="relative w-full h-[500px] md:h-[600px] rounded-3xl overflow-hidden mb-12 shadow-2xl group touch-pan-y bg-black"
-            {...swipeHandlers}
-        >
-            <AnimatePresence initial={false} custom={direction}>
-                <motion.div
-                    key={currentIndex}
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                        x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 }
-                    }}
-                    className="absolute inset-0"
-                >
-                    {/* Background Image */}
-                    <div className="absolute inset-0">
-                        <img
-                            src={`${BACKDROP_BASE_URL}${currentMovie.backdrop_path}`}
-                            alt={currentMovie.title || currentMovie.name}
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/80 via-transparent to-transparent"></div>
+        <div className="relative w-full h-[400px] md:h-[600px] rounded-3xl overflow-hidden mb-12 shadow-2xl group bg-black">
+            {/* Scroll Container */}
+            <div 
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide hide-scrollbar"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+                {trending.map((movie, idx) => (
+                    <div key={idx} className="relative w-full h-full shrink-0 snap-center snap-always">
+                        {/* Background Image */}
+                        <div className="absolute inset-0">
+                            <img
+                                src={`${BACKDROP_BASE_URL}${movie.backdrop_path}`}
+                                alt={movie.title || movie.name}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/90 via-[#020617]/40 to-transparent"></div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:w-2/3 flex flex-col gap-3 md:gap-4 transition-all duration-700">
+                            <div className="flex items-center gap-2 text-yellow-400 font-bold text-xs md:text-sm bg-black/40 backdrop-blur-md px-3 py-1 rounded-full w-fit">
+                                <Star className="w-3 h-3 md:w-4 md:h-4 fill-yellow-400" />
+                                <span>#{idx + 1} Gündemdekiler</span>
+                            </div>
+
+                            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl">
+                                {movie.title || movie.name}
+                            </h1>
+
+                            <p className="text-slate-200 line-clamp-2 md:line-clamp-3 text-sm sm:text-base md:text-lg lg:text-xl font-medium md:font-light leading-relaxed drop-shadow-md max-w-2xl">
+                                {movie.overview}
+                            </p>
+
+                            <div className="flex items-center gap-3 md:gap-4 mt-2">
+                                <button
+                                    onClick={() => navigate(`/${movie.media_type}/${movie.id}`)}
+                                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 md:px-8 md:py-3 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-lg shadow-cyan-900/50 text-sm md:text-base"
+                                >
+                                    <PlayCircle className="w-5 h-5" />
+                                    İncele
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/${movie.media_type}/${movie.id}`)}
+                                    className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-5 py-2.5 md:px-8 md:py-3 rounded-full font-bold flex items-center gap-2 transition-all border border-white/10 text-sm md:text-base"
+                                >
+                                    <Info className="w-5 h-5" />
+                                    Detaylar
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                ))}
+            </div>
 
-                    {/* Content */}
-                    <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full md:w-2/3 lg:w-1/2 flex flex-col gap-4">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="flex items-center gap-2 text-yellow-400 font-bold text-sm bg-black/30 backdrop-blur-md px-3 py-1 rounded-full w-fit"
-                        >
-                            <Star className="w-4 h-4 fill-yellow-400" />
-                            <span>#{currentIndex + 1} Gündemdekiler</span>
-                        </motion.div>
+            {/* Desktop Navigation Arrows */}
+            <div className="hidden md:block absolute top-1/2 -translate-y-1/2 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <button onClick={() => scrollTo(currentIndex - 1)} className="p-2 bg-black/40 hover:bg-black/70 rounded-full backdrop-blur text-white border border-white/10">
+                    <ChevronLeft className="w-8 h-8" />
+                </button>
+            </div>
+            <div className="hidden md:block absolute top-1/2 -translate-y-1/2 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <button onClick={() => scrollTo(currentIndex + 1)} className="p-2 bg-black/40 hover:bg-black/70 rounded-full backdrop-blur text-white border border-white/10">
+                    <ChevronRight className="w-8 h-8" />
+                </button>
+            </div>
 
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-2xl"
-                        >
-                            {currentMovie.title || currentMovie.name}
-                        </motion.h1>
-
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-slate-300 line-clamp-3 text-lg font-light leading-relaxed drop-shadow-md"
-                        >
-                            {currentMovie.overview}
-                        </motion.p>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="flex items-center gap-4 mt-4"
-                        >
-                            <button
-                                onClick={() => navigate(`/${currentMovie.media_type}/${currentMovie.id}`)}
-                                className="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-lg shadow-cyan-900/50"
-                            >
-                                <PlayCircle className="w-5 h-5" />
-                                İncele
-                            </button>
-                            <button
-                                onClick={() => navigate(`/${currentMovie.media_type}/${currentMovie.id}`)}
-                                className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 transition-all border border-white/10"
-                            >
-                                <Info className="w-5 h-5" />
-                                Detaylar
-                            </button>
-                        </motion.div>
-                    </div>
-                </motion.div>
-            </AnimatePresence>
-
-            {/* Indicators */}
-            <div className="absolute bottom-8 right-8 flex gap-2 z-20">
+            {/* Dots Indicators */}
+            <div className="absolute bottom-6 right-6 flex gap-2 z-20">
                 {trending.map((_, idx) => (
                     <button
                         key={idx}
-                        onClick={() => {
-                            setDirection(idx > currentIndex ? 1 : -1);
-                            setCurrentIndex(idx);
-                        }}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-8 bg-cyan-500' : 'bg-white/30 hover:bg-white/60'}`}
+                        onClick={() => scrollTo(idx)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-8 bg-cyan-500' : 'bg-white/40 hover:bg-white/80'}`}
                     />
                 ))}
             </div>
+            
+            {/* CSS to hide scrollbar */}
+            <style dangerouslySetInnerHTML={{__html: `
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            `}} />
         </div>
     );
 };

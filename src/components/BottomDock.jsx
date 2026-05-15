@@ -1,46 +1,78 @@
 import React from 'react';
 import { Home, Heart, Sparkles, Film, Tv } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const BottomDock = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     const menuItems = [
-        { id: 'home', icon: <Home className="w-5 h-5" />, label: 'Ana Sayfa', path: '/' },
-        { id: 'movie', icon: <Film className="w-5 h-5" />, label: 'Filmler', path: '/category/movie' },
-        { id: 'tv', icon: <Tv className="w-5 h-5" />, label: 'Diziler', path: '/category/tv' },
-        { id: 'trending', icon: <Sparkles className="w-5 h-5" />, label: 'Gündem', path: '/category/trending' },
-        { id: 'watchlist', icon: <Heart className="w-5 h-5" />, label: 'Listem', path: '/watchlist' },
+        { id: 'home', icon: <Home className="w-[22px] h-[22px]" />, label: 'Ana Sayfa', path: '/' },
+        { id: 'movie', icon: <Film className="w-[22px] h-[22px]" />, label: 'Filmler', path: '/category/movie?type=movie' },
+        { id: 'tv', icon: <Tv className="w-[22px] h-[22px]" />, label: 'Diziler', path: '/category/tv?type=tv' },
+        { id: 'trending', icon: <Sparkles className="w-[22px] h-[22px]" />, label: 'Gündem', path: '/category/trending?type=mixed' },
+        { id: 'watchlist', icon: <Heart className="w-[22px] h-[22px]" />, label: 'Listem', path: '/watchlist' },
     ];
 
+    const handleItemClick = (path) => {
+        navigate(path);
+    };
+
+    const isPathActive = (itemPath, currentPath, currentType) => {
+        if (itemPath === '/') return currentPath === '/';
+        const urlObj = new URL(itemPath, window.location.origin);
+        if (currentPath !== urlObj.pathname) return false;
+        
+        // Exact match for type params
+        const itemType = urlObj.searchParams.get('type');
+        if (itemType && currentType !== itemType) return false;
+        
+        return true;
+    };
+
+    const currentType = searchParams.get('type');
+
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[95%] max-w-sm">
-            {/* Glass Container - Windows 11 Style */}
-            <div className="bg-[#202020]/90 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex items-center justify-around p-2 gap-1 ring-1 ring-white/10">
-                {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => navigate(item.path)}
-                            className={`relative group flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${isActive ? 'bg-white/10 text-cyan-400' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-                        >
-                            {/* Hover Glow Effect */}
-                            <div className="absolute inset-0 bg-cyan-500/20 rounded-xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-300" />
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[96%] max-w-sm">
+            {/* Eye-catching Glass Dock with gradient border */}
+            <div className="bg-gradient-to-r from-cyan-950/80 via-blue-950/80 to-purple-950/80 backdrop-blur-2xl border-t border-white/20 border-b border-black/50 border-x border-white/10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.2)] p-2 px-3 relative overflow-hidden ring-1 ring-cyan-500/20">
+                
+                {/* Subtle animated background glow */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10 animate-pulse pointer-events-none"></div>
 
-                            {/* Icon with scale animation */}
-                            <div className={`relative z-10 transition-transform duration-300 ${isActive ? '-translate-y-1 scale-110' : 'group-hover:-translate-y-1 group-hover:scale-110'}`}>
-                                {item.icon}
-                            </div>
+                <div className="flex items-center justify-between w-full relative z-10">
+                    {menuItems.map((item) => {
+                        const isActive = isPathActive(item.path, location.pathname, currentType);
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => handleItemClick(item.path)}
+                                className={`relative flex flex-col items-center justify-center p-1.5 min-w-[60px] transition-all duration-500 group ${isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                            >
+                                {/* Active Indicator Background Glow */}
+                                <div className={`absolute inset-0 bg-gradient-to-br from-cyan-500/30 to-purple-500/30 rounded-2xl blur-md transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
+                                <div className={`absolute inset-1 bg-gradient-to-b from-white/10 to-transparent rounded-2xl transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
 
-                            {/* Active Dot */}
-                            {isActive && (
-                                <div className="absolute bottom-1 w-1 h-1 bg-cyan-400 rounded-full animate-pulse" />
-                            )}
-                        </button>
-                    );
-                })}
+                                <div className={`relative z-10 transition-all duration-500 ease-out ${isActive ? '-translate-y-2' : 'group-active:scale-90 group-hover:-translate-y-1'}`}>
+                                    {/* Icon container with shadow */}
+                                    <div className={`${isActive ? 'filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : ''}`}>
+                                        {item.icon}
+                                    </div>
+                                </div>
+                                
+                                <span className={`text-[10px] font-bold tracking-wide transition-all duration-500 absolute bottom-1 ${isActive ? 'opacity-100 translate-y-0 text-cyan-50' : 'opacity-0 translate-y-2'}`}>
+                                    {item.label}
+                                </span>
+                                
+                                {/* Active Dot */}
+                                {isActive && (
+                                    <div className="absolute -bottom-1 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,1)]" />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

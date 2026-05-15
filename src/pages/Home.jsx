@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
-import { Film, Tv, Sparkles, Brain } from 'lucide-react';
+import { Film, Tv, Sparkles, Brain, Dice5 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MOVIE_CATEGORIES, TV_CATEGORIES, MIXED_CATEGORIES } from '../lib/constants.jsx';
 import HeroSlider from '../components/HeroSlider';
+import RandomPicker from '../components/RandomPicker';
 
 const Home = () => {
     const navigate = useNavigate();
     const [activeMediaType, setActiveMediaType] = useState('movie');
+    const [showRandomPicker, setShowRandomPicker] = useState(false);
 
     let categories = [];
     if (activeMediaType === 'movie') categories = MOVIE_CATEGORIES;
     else if (activeMediaType === 'tv') categories = TV_CATEGORIES;
     else categories = MOVIE_CATEGORIES; // Default
 
-    // Override Gündemdekiler to be Mixed if user wants "hem dizi hem film olsun" in top section
-    // We can just modify the first item of specialCategories during render if needed,
-    // or better, update constants to make the default trending mixed.
-    // However, user said "sayfanın en üstünde", which might be HeroSlider.
-    // But they also said "gündemdeki kısım eklediğin mobilde dokunmatikle kaydırılsın".
-
     const specialCategories = categories.filter(c => c.section === 'special');
     const genreCategories = categories.filter(c => c.section === 'genre');
 
     const handleCategoryClick = (category) => {
-        // Pass the effective type (category.type or activeMediaType)
         const type = category.type || activeMediaType;
         navigate(`/category/${category.id}?type=${type}`);
     };
@@ -33,7 +28,7 @@ const Home = () => {
             {/* Hero Section */}
             <HeroSlider />
 
-            <div className="text-center mb-12 mt-4">
+            <div className="text-center mb-8 mt-4">
                 <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full mb-4">
                     <Sparkles className="w-4 h-4 text-cyan-400" />
                     <span className="text-xs text-slate-300 font-medium tracking-wide">YAPAY ZEKA DESTEKLİ SİNEMA REHBERİ</span>
@@ -41,9 +36,21 @@ const Home = () => {
                 <h2 className="text-4xl md:text-5xl text-white font-bold tracking-tight mb-4 drop-shadow-2xl">
                     Ne İzleyeceğine Karar Veremedin mi?
                 </h2>
-                <p className="text-slate-400 max-w-xl mx-auto text-lg font-light leading-relaxed">
+                <p className="text-slate-400 max-w-xl mx-auto text-lg font-light leading-relaxed mb-6">
                     İzlenti, global veri tabanlarını tarar, puanları analiz eder ve sana en doğru sonucu sunar.
                 </p>
+
+                {/* 🎲 RASTGELE SEÇ BUTONU */}
+                <button
+                    onClick={() => setShowRandomPicker(true)}
+                    className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 hover:from-purple-500 hover:via-pink-500 hover:to-orange-400 text-white px-8 py-4 rounded-2xl font-black text-lg transition-all shadow-lg shadow-purple-900/40 hover:shadow-xl hover:shadow-purple-900/60 hover:scale-105 active:scale-95"
+                >
+                    <Dice5 className="w-6 h-6 group-hover:animate-bounce" />
+                    <span>Akşama Ne İzleyelim?</span>
+                    <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-md">
+                        Yeni!
+                    </span>
+                </button>
             </div>
 
             <div className="flex justify-center mb-12">
@@ -82,9 +89,9 @@ const Home = () => {
                                 <div className="bg-white/5 p-3 rounded-xl group-hover:scale-110 transition duration-300 shadow-inner">
                                     {cat.icon}
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-slate-200 group-hover:text-cyan-400 transition text-sm">{cat.name}</h3>
-                                    <p className="text-[10px] text-slate-500 mt-1 group-hover:text-slate-400 font-medium uppercase tracking-wider">Listeyı İncele &rarr;</p>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-slate-200 group-hover:text-cyan-400 transition text-sm truncate">{cat.name}</h3>
+                                    <p className="text-[10px] text-slate-500 mt-1 group-hover:text-slate-400 font-medium uppercase tracking-wider">Listeyi İncele &rarr;</p>
                                 </div>
                             </div>
                         ))}
@@ -108,8 +115,8 @@ const Home = () => {
                                 <div className="bg-white/5 p-3 rounded-xl group-hover:scale-110 transition duration-300 shadow-inner">
                                     {cat.icon}
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-slate-200 group-hover:text-purple-400 transition text-sm">{cat.name}</h3>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-slate-200 group-hover:text-purple-400 transition text-sm truncate">{cat.name}</h3>
                                     <p className="text-[10px] text-slate-500 mt-1 group-hover:text-slate-400 font-medium uppercase tracking-wider">Keşfet &rarr;</p>
                                 </div>
                             </div>
@@ -134,6 +141,9 @@ const Home = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Random Picker Modal */}
+            <RandomPicker isOpen={showRandomPicker} onClose={() => setShowRandomPicker(false)} />
         </div>
     );
 };

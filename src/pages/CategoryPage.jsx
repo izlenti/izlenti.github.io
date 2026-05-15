@@ -14,7 +14,18 @@ const CategoryPage = ({ watchlist, toggleWatchlist, isInWatchlist }) => {
     const type = searchParams.get('type') || 'movie';
 
     const categories = type === 'movie' ? MOVIE_CATEGORIES : (type === 'tv' ? TV_CATEGORIES : MIXED_CATEGORIES);
-    const category = categories.find(c => c.id === id) || { name: 'Kategori Bulunamadı', id: 'unknown', type };
+    
+    // Search primary list first, then fallback to all lists
+    let category = categories.find(c => c.id === id);
+    if (!category) {
+        category = [...MOVIE_CATEGORIES, ...TV_CATEGORIES, ...MIXED_CATEGORIES].find(c => c.id === id);
+    }
+    if (!category) {
+        if (id === 'movie') category = { name: 'Tüm Filmler', id: 'movie', type: 'movie' };
+        else if (id === 'tv') category = { name: 'Tüm Diziler', id: 'tv', type: 'tv' };
+        else if (id === 'trending') category = { name: 'Gündemdekiler', id: 'trending', type: 'mixed' };
+        else category = { name: 'Kategori Bulunamadı', id: 'unknown', type };
+    }
 
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -76,9 +87,14 @@ const CategoryPage = ({ watchlist, toggleWatchlist, isInWatchlist }) => {
         fetchData(nextPage, sortBy, false);
     };
 
+    // Subcategories for the pill menu
+    const subCategories = type === 'movie' 
+        ? MOVIE_CATEGORIES.filter(c => c.section === 'genre') 
+        : (type === 'tv' ? TV_CATEGORIES.filter(c => c.section === 'genre') : []);
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
                 <h2 className="text-sm font-bold text-slate-200 uppercase tracking-widest flex items-center gap-3">
                     <Filter className="w-5 h-5 text-cyan-400" />
                     {category.name}
@@ -107,6 +123,33 @@ const CategoryPage = ({ watchlist, toggleWatchlist, isInWatchlist }) => {
                     </button>
                 </div>
             </div>
+
+            {/* Subcategories (Pill Menu) */}
+            {(type === 'movie' || type === 'tv') && subCategories.length > 0 && (
+                <div className="mb-8 w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide flex gap-3 pb-2 px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <button
+                        onClick={() => navigate(`/category/${type}?type=${type}`)}
+                        className={`snap-start shrink-0 px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-md ${id === type ? 'bg-cyan-600 text-white shadow-cyan-900/50 scale-105' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}
+                    >
+                        {type === 'movie' ? 'Tüm Filmler' : 'Tüm Diziler'}
+                    </button>
+                    {subCategories.map(sub => (
+                        <button
+                            key={sub.id}
+                            onClick={() => navigate(`/category/${sub.id}?type=${type}`)}
+                            className={`snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-md ${id === sub.id ? 'bg-purple-600 text-white shadow-purple-900/50 scale-105' : 'bg-[#0f172a] border border-white/10 text-slate-300 hover:bg-white/10 hover:border-cyan-500/30'}`}
+                        >
+                            <span className="opacity-80 scale-90">{sub.icon}</span>
+                            {sub.name}
+                        </button>
+                    ))}
+                    
+                    <style dangerouslySetInnerHTML={{__html: `
+                        .scrollbar-hide::-webkit-scrollbar { display: none; }
+                        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+                    `}} />
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-32 space-y-4">
