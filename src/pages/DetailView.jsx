@@ -309,7 +309,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                             <Brain className="w-5 h-5 animate-pulse" />
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-black text-sm tracking-wide uppercase">🤖 GEMINI-3.5 PRO SİNEMATİK RAPORU</h4>
+                                            <h4 className="text-white font-black text-sm tracking-wide uppercase">🤖 İZLENTİ AI PRO SİNEMATİK RAPORU</h4>
                                             <p className="text-[10px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5">● AKTİF ANALİZ MOTORU ÇALIŞIYOR</p>
                                         </div>
                                     </div>
@@ -343,7 +343,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                             <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                                         </div>
                                     </div>
-                                    <p className="text-[9px] text-slate-500 mt-2 text-right">Maviq AI veri havuzu ve küresel sinema algoritmalarının harmonik analizi</p>
+                                    <p className="text-[9px] text-slate-500 mt-2 text-right">İzlenti AI veri havuzu ve küresel sinema algoritmalarının harmonik analizi</p>
                                 </div>
 
                                 {/* 2. NEDEN İZLENMELİ? / İZLENMEMELİ? (Gemini Style) */}
