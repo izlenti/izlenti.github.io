@@ -10,7 +10,7 @@ const BottomDock = () => {
     const menuItems = [
         { id: 'movie', icon: Film, label: 'Filmler', path: '/category/movie?type=movie' },
         { id: 'tv', icon: Tv, label: 'Diziler', path: '/category/tv?type=tv' },
-        { id: 'home', icon: Home, label: 'Ana Sayfa', path: '/', isCenter: true },
+        { id: 'home', icon: Home, label: 'Ana Sayfa', path: '/' },
         { id: 'trending', icon: Sparkles, label: 'Gündem', path: '/category/trending?type=mixed' },
         { id: 'watchlist', icon: Heart, label: 'Listem', path: '/watchlist' },
     ];
@@ -28,33 +28,12 @@ const BottomDock = () => {
 
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[94vw] max-w-[390px] px-2">
-            <div className="bg-[#070b16]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.8)] px-4 py-3 ring-1 ring-white/5 relative">
-                <div className="flex items-end justify-between gap-1 relative">
+            <div className="bg-[#070b16]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.8)] px-4 py-2.5 ring-1 ring-white/5 relative">
+                <div className="flex items-center justify-between gap-1 relative">
                     {menuItems.map((item) => {
                         const isActive = isPathActive(item.path, location.pathname, currentType);
                         const Icon = item.icon;
-                        const isCenter = item.isCenter;
-
-                        if (isCenter) {
-                            return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => navigate(item.path)}
-                                    className="flex flex-col items-center justify-center -mt-6 relative transition-transform duration-200 active:scale-95 shrink-0 z-50 w-16"
-                                >
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border ${
-                                        isActive
-                                            ? 'bg-gradient-to-br from-cyan-500 to-purple-600 shadow-lg shadow-cyan-500/40 scale-105 border-white/20'
-                                            : 'bg-gradient-to-br from-cyan-800/80 to-purple-900/80 border-white/10 hover:scale-120'
-                                    }`}>
-                                        <Icon className={`w-5 h-5 text-white ${isActive ? 'drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]' : ''}`} />
-                                    </div>
-                                    <span className={`text-[9px] font-black mt-1.5 tracking-wide whitespace-nowrap transition-colors duration-200 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`}>
-                                        {item.label}
-                                    </span>
-                                </button>
-                            );
-                        }
+                        const isHome = item.id === 'home';
 
                         return (
                             <button
@@ -67,8 +46,8 @@ const BottomDock = () => {
                                     isActive
                                         ? 'text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]'
                                         : 'hover:text-slate-300'
-                                }`} />
-                                <span className={`text-[8px] font-bold mt-1 transition-colors duration-200 whitespace-nowrap ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>
+                                } ${isHome ? 'group-hover:scale-125 duration-300' : 'group-hover:scale-110'}`} />
+                                <span className={`text-[8.5px] font-bold mt-1 transition-colors duration-200 whitespace-nowrap ${isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'}`}>
                                     {item.label}
                                 </span>
                             </button>
