@@ -280,6 +280,101 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         aiNarrative += `Geniş kitlelerin radarından henüz kaçmış gibi görünen bu yapım, oylama sayısının azlığı sebebiyle keşfedilmeyi bekleyen gizli bir hazine niteliğinde. Formül işlerden sıkılan ve özgün arayışları olan sinemaseverler için kusursuz bir keşif fırsatı sunuyor.`;
     }
 
+    // --- GEMINI/CHATGPT BENZERİ ÇEKİM VE RİSK ANALİZİ (NEDEN İZLENMELİ / İZLENMEMELİ) ---
+    let whyWatch = [];
+    let whySkip = [];
+
+    // Genere-specific rules for Why Watch
+    if (genres.includes('Aksiyon') || genres.includes('Macera')) {
+        whyWatch.push("Yüksek oktanlı aksiyon sekansları, sürükleyici kovalamacalar ve etkileyici koreografiler.");
+    }
+    if (genres.includes('Bilim Kurgu')) {
+        whyWatch.push("Geleceğe ve teknolojiye dair ufuk açıcı teoriler ve yaratıcı evren tasarımı.");
+    }
+    if (genres.includes('Dram')) {
+        whyWatch.push("Duygusal derinliği yüksek, karakter psikolojilerini derinlemesine ele alan sarsıcı hikaye anlatımı.");
+    }
+    if (genres.includes('Komedi')) {
+        whyWatch.push("Hayatın stresinden uzaklaştıracak, bol tebessüm ve akıcı bir mizah anlayışı.");
+    }
+    if (genres.includes('Korku') || genres.includes('Gerilim')) {
+        whyWatch.push("Adrenalin seviyenizi artıracak tekinsiz sahneler, ses mühendisliği ve yüksek tansiyon.");
+    }
+    if (genres.includes('Gizem') || genres.includes('Suç')) {
+        whyWatch.push("İzleyiciyi sürekli bulmaca çözmeye iten, sürprizlerle dolu katmanlı dedektiflik ve ters köşe anlatısı.");
+    }
+    if (genres.includes('Fantastik')) {
+        whyWatch.push("Gerçekliğin sınırlarını aşan, mitolojik veya doğaüstü ögelerle bezenmiş görsel bir masal dünyası.");
+    }
+    if (genres.includes('Animasyon')) {
+        whyWatch.push("Her yaştan izleyiciye hitap eden olağanüstü sanatsal çizimler ve evrensel sıcak mesajlar.");
+    }
+
+    // Director and Cast additions to Why Watch
+    if (director) {
+        whyWatch.push(`Yönetmen ${director}'ın kendine has görsel vizyonu ve kare kadraj ustalığı.`);
+    }
+    if (mainStar) {
+        whyWatch.push(`Başrolde ${mainStar}'ın karakterin ruhunu perdeye yansıtan güçlü ve inandırıcı oyunculuğu.`);
+    }
+
+    // General boosters if high rating
+    if (wideSpectrumScore >= 7.8) {
+        whyWatch.push("Teknik ve anlatısal açıdan kusursuza yakın bir sinematografi ve ödüllük prodüksiyon kalitesi.");
+    } else {
+        whyWatch.push("Türün sevenleri için çerezlik, yüksek tempolu ve keyifli bir hafta sonu eğlencesi sunması.");
+    }
+
+    // Default filler to ensure whyWatch is rich
+    if (whyWatch.length < 3) {
+        whyWatch.push("Gelişmiş görsel estetik ve sahne tasarımlarıyla göz dolduran prodüksiyon tasarımı.");
+        whyWatch.push("Hikaye akışı boyunca kopmayan merak unsuru ve akıcı bir olay örgüsü.");
+    }
+
+    // Limit whyWatch to top 3 beautiful elements
+    whyWatch = whyWatch.slice(0, 3);
+
+
+    // Genere-specific rules for Why Skip (Risks)
+    if (genres.includes('Dram') || genres.includes('Tarih') || runtime > 130) {
+        whySkip.push("Yavaş ilerleyen anlatı temposu, uzun diyaloglar ve sabır gerektiren sekanslar.");
+    }
+    if (genres.includes('Korku') || genres.includes('Gerilim')) {
+        whySkip.push("Yoğun tekinsiz atmosfer, anlık ürkütücü ögeler (jump-scares) ve gergin psikolojik baskı.");
+    }
+    if (genres.includes('Bilim Kurgu') || genres.includes('Gizem')) {
+        whySkip.push("Kafa karıştırabilecek karmaşık zaman/konsept teorileri ve dikkatli takip gerektiren bulmacalar.");
+    }
+    if (genres.includes('Komedi') || genres.includes('Romantik')) {
+        whySkip.push("Sinema tarihinde daha önce defalarca kullanılmış klişe durumlar ve tahmin edilebilir son.");
+    }
+    if (genres.includes('Aksiyon') || genres.includes('Macera')) {
+        if (wideSpectrumScore < 6.8) {
+            whySkip.push("Görselliğe fazlaca odaklanıp, hikaye derinliğini ve mantık sınırlarını geri plana itmesi.");
+        }
+    }
+
+    // General issues
+    if (wideSpectrumScore < 6.0) {
+        whySkip.push("Yer yer kendini tekrar eden olaylar ve kopuk sahneler nedeniyle akıcılıkta yaşanan aksamalar.");
+    }
+    if (votes < 100) {
+        whySkip.push("Hakkında yeterince küresel veri/eleştiri bulunmaması sebebiyle sürpriz bir deneyim riski taşıması.");
+    }
+
+    // Default whySkip fallback
+    if (whySkip.length < 2) {
+        whySkip.push("Alışılagelmiş sinematik formüllerin dışına çıkmayarak çığır açıcı bir yenilik sunamaması.");
+        whySkip.push("Aksiyon veya derinlik arayan bazı seyirciler için anlatı tonunun durağan hissettirebilmesi.");
+    }
+
+    whySkip = whySkip.slice(0, 2);
+
+    // --- CİNSEL / YETİŞKİN İÇERİK TARAMASI (HASSAS İÇERİK UYARISI) ---
+    const explicitKeywords = ['sex', 'nudity', 'erotic', 'sensual', 'prostitution', 'porn', 'strip', 'adultery', 'sexual', 'orgasm', 'swinger', 'orgi', 'escort', 'naked'];
+    const hasAdultContent = keywordNames.some(k => explicitKeywords.some(t => k.includes(t))) || 
+                            genres.some(g => ['Erotik', 'Erotizm'].includes(g));
+
     // --- 3. PSİKOLOJİK PROFİL (Psychological Profile) ---
     let psychProfile = {
         mood: "Nötr",
@@ -303,6 +398,10 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
 
     if (wideSpectrumScore >= 7.8) psychProfile.traits.push("Zihin Açıcı Entelektüel Derinlik");
     if (runtime > 135) psychProfile.traits.push("Odaklanma Gerektiren Anlatı");
+
+    if (hasAdultContent) {
+        psychProfile.warning = (psychProfile.warning ? psychProfile.warning + " " : "") + "Yetişkin İçerik: Yapım cinsel ögeler, çıplaklık veya erotizm unsurları barındırmaktadır (18+).";
+    }
 
     // --- 4. SİNİRSEL EŞLEŞME (Neural Match) ---
     // Popülerlik, bütçe, oyuncu kadrosu ve YZ puanımızın harmonik ortalaması
@@ -381,7 +480,8 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         score, votes, term, termCap, originalTitle, localTitle, genres, runtime, reviewCount, isUnreleased,
         psychProfile, matchRate, epicSynopsis,
         budgetAnalysis, seasonInfo, topCast, castAnalysis,
-        watchTiming, rewatchValue, thematicInsight
+        watchTiming, rewatchValue, thematicInsight,
+        whyWatch, whySkip, hasAdultContent
     };
 };
 

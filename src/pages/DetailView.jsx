@@ -296,71 +296,119 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 <p className="text-slate-200 leading-relaxed">{analysis.verdictReason}</p>
                             </div>
 
-                            {/* DETAYLI ANALİZ KARTI */}
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                                    <Brain className="w-32 h-32 text-white" />
+                            {/* DETAYLI ANALİZ KARTI (GEMINI SİNEMATİK RAPORU) */}
+                            <div className="bg-slate-950/80 backdrop-blur-md border border-cyan-500/20 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
+                                    <Brain className="w-40 h-40 text-cyan-400" />
+                                </div>
+
+                                {/* Gemini Pro Header */}
+                                <div className="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="bg-gradient-to-r from-cyan-500 to-purple-600 p-2 rounded-xl text-white shadow-md shadow-cyan-500/20">
+                                            <Brain className="w-5 h-5 animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-black text-sm tracking-wide uppercase">🤖 GEMINI-3.5 PRO SİNEMATİK RAPORU</h4>
+                                            <p className="text-[10px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5">● AKTİF ANALİZ MOTORU ÇALIŞIYOR</p>
+                                        </div>
+                                    </div>
+                                    <span className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        PRO MODEL
+                                    </span>
                                 </div>
 
                                 {/* HEDEF KİTLE */}
-                                <div className="flex gap-4 relative z-10 bg-white/5 p-4 rounded-xl border border-white/10 items-start">
-                                    <div className="text-3xl bg-black/20 p-2 rounded-lg">🎯</div>
+                                <div className="flex gap-4 relative z-10 bg-white/5 p-4 rounded-2xl border border-white/10 items-start">
+                                    <div className="text-3xl bg-black/20 p-2.5 rounded-xl shrink-0">🎯</div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-white mb-1">{analysis.targetAudience?.title}</h4>
-                                        <p className="text-slate-300 text-sm leading-relaxed">{analysis.targetAudience?.desc}</p>
+                                        <h4 className="text-sm font-bold text-white mb-1">Tavsiye Edilen Kitle ({analysis.targetAudience?.title})</h4>
+                                        <p className="text-slate-300 text-xs leading-relaxed">{analysis.targetAudience?.desc}</p>
                                     </div>
                                 </div>
-
-                                {/* --- YENİ AI ÖZELLİKLERİ --- */}
 
                                 {/* 1. YZ İZLEYİCİ SKORU (Audience Score) */}
-                                <div className="relative z-10 bg-slate-900/50 p-4 rounded-xl border border-cyan-500/30">
+                                <div className="relative z-10 bg-slate-900/60 p-5 rounded-2xl border border-cyan-500/30">
                                     <div className="flex justify-between items-end mb-2">
-                                        <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                                            <Brain className="w-4 h-4" /> YZ İzleyici Skoru
+                                        <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
+                                            📊 YZ Sinematik Başarı Endeksi
                                         </h4>
-                                        <span className="text-2xl font-black text-cyan-300">{analysis.matchRate}%</span>
+                                        <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">{analysis.matchRate}%</span>
                                     </div>
-                                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-[1px]">
                                         <div
-                                            className="h-full bg-gradient-to-r from-cyan-600 to-purple-500 relative"
+                                            className="h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-purple-600 rounded-full relative"
                                             style={{ width: `${analysis.matchRate}%` }}
                                         >
-                                            <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                                            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-slate-500 mt-2 text-right">Dünya genelindeki izleyici reaksiyonlarının AI tabanlı analizi</p>
+                                    <p className="text-[9px] text-slate-500 mt-2 text-right">Maviq AI veri havuzu ve küresel sinema algoritmalarının harmonik analizi</p>
                                 </div>
 
-                                {/* 2. PSİKOLOJİK PROFİL */}
+                                {/* 2. NEDEN İZLENMELİ? / İZLENMEMELİ? (Gemini Style) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                    {/* Neden İzlenmeli */}
+                                    <div className="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-2xl space-y-3">
+                                        <h5 className="text-emerald-400 font-black text-xs uppercase tracking-widest flex items-center gap-1.5">
+                                            📌 Neden İzlenmeli?
+                                        </h5>
+                                        <ul className="space-y-2">
+                                            {analysis.whyWatch?.map((item, idx) => (
+                                                <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-2">
+                                                    <span className="text-emerald-500 text-sm mt-[1px]">✓</span>
+                                                    <span>{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Neden İzlenmemeli */}
+                                    <div className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl space-y-3">
+                                        <h5 className="text-rose-400 font-black text-xs uppercase tracking-widest flex items-center gap-1.5">
+                                            ⚠️ Neden İzlenmemeli?
+                                        </h5>
+                                        <ul className="space-y-2">
+                                            {analysis.whySkip?.map((item, idx) => (
+                                                <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-2">
+                                                    <span className="text-rose-500 text-sm mt-[1px]">✕</span>
+                                                    <span>{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* 3. PSİKOLOJİK PROFİL & UYARILAR */}
                                 {analysis.psychProfile && (
-                                    <div className="relative z-10 grid grid-cols-2 gap-4">
-                                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
-                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Ruh Hali</div>
-                                            <div className="text-white font-bold">{analysis.psychProfile.mood}</div>
-                                        </div>
-                                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
-                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Dominant Özellik</div>
-                                            <div className="text-white font-bold">{analysis.psychProfile.traits[0] || "Dengeli"}</div>
+                                    <div className="relative z-10 space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
+                                                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Atmosfer Tonu</div>
+                                                <div className="text-white text-xs font-bold">{analysis.psychProfile.mood}</div>
+                                            </div>
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
+                                                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Dominant Karakteristik</div>
+                                                <div className="text-white text-xs font-bold">{analysis.psychProfile.traits[0] || "Dengeli"}</div>
+                                            </div>
                                         </div>
                                         {analysis.psychProfile.warning && (
-                                            <div className="col-span-2 bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex items-center gap-3">
-                                                <div className="text-xl">⚠️</div>
-                                                <p className="text-xs text-red-200">{analysis.psychProfile.warning}</p>
+                                            <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3 shadow-inner">
+                                                <div className="text-xl shrink-0 mt-[1px]">⚠️</div>
+                                                <div>
+                                                    <h6 className="text-rose-400 font-bold text-xs uppercase tracking-wider mb-0.5">Yapay Zeka İçerik Uyarısı</h6>
+                                                    <p className="text-rose-200 text-xs leading-relaxed">{analysis.psychProfile.warning}</p>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* ARTILAR VE EKSİLER */}
-                                <div className="relative z-10">
-                                    <div className="text-slate-200 leading-relaxed text-sm whitespace-pre-line">{analysis.prosAndCons}</div>
-                                </div>
-
                                 {/* SON SÖZ */}
-                                <div className="relative z-10 border-t border-white/10 pt-6">
-                                    <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-5 rounded-xl border border-cyan-500/20">
-                                        <p className="text-cyan-200 text-base font-medium">💬 {analysis.finalWord}</p>
+                                <div className="relative z-10 border-t border-white/10 pt-5">
+                                    <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-5 rounded-2xl border border-cyan-500/20">
+                                        <h5 className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1.5">💬 Yapay Zeka Son Sözü</h5>
+                                        <p className="text-cyan-200 text-sm font-medium leading-relaxed italic">"{analysis.finalWord}"</p>
                                     </div>
                                 </div>
                             </div>

@@ -27,9 +27,9 @@ const BottomDock = () => {
     const currentType = searchParams.get('type');
 
     return (
-        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-auto">
-            <div className="bg-[#0a0f1e]/95 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.6)] px-2.5 py-1 ring-1 ring-white/5">
-                <div className="flex items-center gap-0.5">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] md:hidden w-[94vw] max-w-[390px] px-2">
+            <div className="bg-[#070b16]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.8)] px-4 py-3 ring-1 ring-white/5 relative">
+                <div className="flex items-end justify-between gap-1 relative">
                     {menuItems.map((item) => {
                         const isActive = isPathActive(item.path, location.pathname, currentType);
                         const Icon = item.icon;
@@ -40,16 +40,16 @@ const BottomDock = () => {
                                 <button
                                     key={item.id}
                                     onClick={() => navigate(item.path)}
-                                    className="flex flex-col items-center justify-center px-1.5 py-0.5 mx-0.5 transition-transform duration-200 active:scale-95"
+                                    className="flex flex-col items-center justify-center -mt-6 relative transition-transform duration-200 active:scale-95 shrink-0 z-50 w-16"
                                 >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border ${
                                         isActive
-                                            ? 'bg-gradient-to-br from-cyan-500 to-purple-600 shadow-md shadow-cyan-500/40 scale-105'
-                                            : 'bg-gradient-to-br from-cyan-700/60 to-purple-800/60 hover:scale-120'
+                                            ? 'bg-gradient-to-br from-cyan-500 to-purple-600 shadow-lg shadow-cyan-500/40 scale-105 border-white/20'
+                                            : 'bg-gradient-to-br from-cyan-800/80 to-purple-900/80 border-white/10 hover:scale-120'
                                     }`}>
-                                        <Icon className={`w-4 h-4 text-white ${isActive ? 'drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]' : ''}`} />
+                                        <Icon className={`w-5 h-5 text-white ${isActive ? 'drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]' : ''}`} />
                                     </div>
-                                    <span className={`text-[7px] font-bold mt-0.5 transition-colors duration-200 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`}>
+                                    <span className={`text-[9px] font-black mt-1.5 tracking-wide whitespace-nowrap transition-colors duration-200 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`}>
                                         {item.label}
                                     </span>
                                 </button>
@@ -60,15 +60,15 @@ const BottomDock = () => {
                             <button
                                 key={item.id}
                                 onClick={() => navigate(item.path)}
-                                className={`flex flex-col items-center justify-center px-2 py-0.5 rounded-full transition-all duration-200 active:scale-95
+                                className={`flex flex-col items-center justify-center py-1 transition-all duration-200 active:scale-95 shrink-0 w-12 group
                                     ${isActive ? 'text-white' : 'text-slate-500 hover:text-slate-400'}`}
                             >
-                                <Icon className={`w-[15px] h-[15px] transition-all duration-200 ${
+                                <Icon className={`w-[17px] h-[17px] transition-all duration-200 ${
                                     isActive
-                                        ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.7)]'
+                                        ? 'text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]'
                                         : 'hover:text-slate-300'
                                 }`} />
-                                <span className={`text-[7px] font-bold mt-0.5 transition-colors duration-200 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>
+                                <span className={`text-[8px] font-bold mt-1 transition-colors duration-200 whitespace-nowrap ${isActive ? 'text-cyan-400' : 'text-slate-500'}`}>
                                     {item.label}
                                 </span>
                             </button>
