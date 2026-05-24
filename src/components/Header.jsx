@@ -72,7 +72,7 @@ const Header = ({ watchlistCount }) => {
                     <img
                         src="/logo.png"
                         alt="İzlenti"
-                        className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:scale-105 drop-shadow-[0_2px_16px_rgba(34,211,238,0.25)]"
+                        className="h-16 sm:h-20 md:h-22 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:scale-105 drop-shadow-[0_4px_24px_rgba(34,211,238,0.35)]"
                     />
                 </div>
 

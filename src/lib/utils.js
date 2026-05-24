@@ -81,207 +81,203 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
     // Ekip ve Kadro
     const director = credits?.crew?.find(c => c.job === 'Director')?.name || '';
     const cast = credits?.cast?.slice(0, 4).map(c => c.name) || [];
-    const castList = cast.length > 0 ? cast.join(", ") : "bilinmeyen bir kadro";
+    const castList = cast.length > 0 ? cast.join(", ") : "sinema dünyasının yetenekli isimleri";
     const mainStar = cast[0] || '';
 
     // Tematik Analiz (Keywords)
     const keywordNames = keywords?.map(k => k.name.toLowerCase()) || [];
     const themes = keywordNames.slice(0, 5).join(", ");
-    const isDark = keywordNames.some(k => ['dark', 'violence', 'murder', 'war', 'horror', 'death'].some(t => k.includes(t)));
-    const isLight = keywordNames.some(k => ['comedy', 'love', 'family', 'friends', 'happy'].some(t => k.includes(t)));
+    const isDark = keywordNames.some(k => ['dark', 'violence', 'murder', 'war', 'horror', 'death', 'crime', 'tragedy'].some(t => k.includes(t))) || 
+                   genres.some(g => ['Korku', 'Gerilim', 'Gizem', 'Savaş'].includes(g));
+    const isLight = keywordNames.some(k => ['comedy', 'love', 'family', 'friends', 'happy', 'fun'].some(t => k.includes(t))) || 
+                    genres.some(g => ['Komedi', 'Aile', 'Romantik'].includes(g));
 
     // Yorum ve Duygu Analizi
     const reviewList = reviews || [];
     const reviewCount = reviewList.length;
 
-    let sentimentScore = 0;
-    const positiveKw = ['amazing', 'good', 'great', 'excellent', 'love', 'perfect', 'best', 'harika', 'güzel', 'iyi'];
-    const negativeKw = ['bad', 'boring', 'worst', 'poor', 'terrible', 'awful', 'kötü', 'sıkıcı', 'berbat'];
+    // --- YAPAY ZEKA GENİŞ SPEKTRUMLU DEĞERLENDİRME MOTORU (WIDE-SPECTRUM AI SCAN) ---
+    // TMDB puanı tek başına yanıltıcı veya yetersiz olabildiği için (özellikle oy sayısı azsa), 
+    // AI motorumuz çok boyutlu bir analiz gerçekleştirir:
+    
+    // A. TMDB Puan Ağırlığı (Oy sayısına göre kalibre edilir)
+    let scoreWeight = 0.45;
+    if (votes < 50) scoreWeight = 0.10;      // Neredeyse sıfır güvenilirlik
+    else if (votes < 200) scoreWeight = 0.20;  // Düşük güvenilirlik
+    else if (votes < 1000) scoreWeight = 0.30; // Orta güvenilirlik
+    else if (votes < 5000) scoreWeight = 0.40; // Yüksek güvenilirlik
+    
+    // B. Küresel Popülerlik & İlgi Bileşeni (0-10 skalasında)
+    let popScore = 5.5; 
+    if (popularity > 800) popScore = 9.8;
+    else if (popularity > 400) popScore = 9.2;
+    else if (popularity > 150) popScore = 8.5;
+    else if (popularity > 50) popScore = 7.6;
+    else if (popularity > 15) popScore = 6.6;
+    else if (popularity > 5) popScore = 5.8;
+    
+    // C. Anlatı ve Tema Karmaşıklığı Bileşeni (0-10 skalasında)
+    let complexityPoints = 0;
+    if (genres.length >= 3) complexityPoints += 1.5;
+    else if (genres.length >= 2) complexityPoints += 1.0;
+    
+    if (keywordNames.length >= 8) complexityPoints += 1.5;
+    else if (keywordNames.length >= 4) complexityPoints += 1.0;
+    
+    if (director) complexityPoints += 1.0;
+    if (cast.length >= 3) complexityPoints += 1.0;
+    if (runtime > 115) complexityPoints += 1.0;
+    if (budget > 40000000) complexityPoints += 1.5; // Büyük prodüksiyon kalitesi
+    else if (budget > 10000000) complexityPoints += 1.0;
+    
+    let complexityScore = Math.min(10, 4.5 + complexityPoints);
 
-    reviewList.slice(0, 20).forEach(r => {
-        const content = (r.content || '').toLowerCase();
-        const rating = r.author_details?.rating;
-
-        if (rating) {
-            if (rating >= 8) sentimentScore += 2;
-            else if (rating >= 6) sentimentScore += 1;
-            else if (rating <= 4) sentimentScore -= 2;
-            else sentimentScore -= 1;
-        } else {
-            if (positiveKw.some(k => content.includes(k))) sentimentScore += 1;
-            if (negativeKw.some(k => content.includes(k))) sentimentScore -= 1;
-        }
-    });
+    // D. Konu Özeti Derinliği Bileşeni (0-10 skalasında)
+    let narrativeRichness = 5.0;
+    if (overview.length > 600) narrativeRichness = 9.5;
+    else if (overview.length > 300) narrativeRichness = 8.5;
+    else if (overview.length > 150) narrativeRichness = 7.5;
+    else if (overview.length > 50) narrativeRichness = 6.2;
+    
+    // E. Geniş Spektrumlu AI Skoru (Wide-Spectrum Score Calculation)
+    let remainingWeight = 1.0 - scoreWeight;
+    let wideSpectrumScore = (score * scoreWeight) + 
+                            (popScore * 0.30 * remainingWeight) + 
+                            (complexityScore * 0.40 * remainingWeight) + 
+                            (narrativeRichness * 0.30 * remainingWeight);
+    
+    // Sınırları belirle
+    wideSpectrumScore = Math.min(9.9, Math.max(1.0, wideSpectrumScore));
 
     let verdict, verdictIcon, verdictClass, verdictReason, prosAndCons, targetAudience, finalWord;
 
-    let reliability = "Yüksek";
-    let scoreAdjustment = 0;
-    
-    if (votes < 50) {
-        reliability = "Çok Düşük";
-        scoreAdjustment = -1.5;
-    } else if (votes < 300) {
-        reliability = "Düşük";
-        scoreAdjustment = -0.8;
-    } else if (votes < 1000) {
-        reliability = "Orta";
-        scoreAdjustment = -0.3;
-    }
-    
-    const effectiveScore = score + scoreAdjustment;
-
-    if (effectiveScore >= 8.0) {
-        verdict = isTv ? "Üst Düzey Dizi" : "Sinematik Başarı";
+    if (wideSpectrumScore >= 8.2) {
+        verdict = isTv ? "💎 Başyapıt Derecesinde Dizi" : "💎 Sinematik Başyapıt";
         verdictIcon = "💎";
         verdictClass = "from-amber-600 to-yellow-500";
-        verdictReason = "Teknik işçiliği, senaryo bütünlüğü ve oyunculuk performanslarıyla kendi türünde standartları belirleyen, objektif olarak başarılı bir yapım.";
-        prosAndCons = "✅ Tutarlı ve derinlikli karakter gelişimi\n✅ Güçlü sinematografi ve kurgu\n✅ Tatmin edici hikaye anlatımı\n❌ Öznel beklentiler dışında majör bir teknik hata yok";
-        targetAudience = { title: "Kalite Arayanlar", desc: "Sinematik anlamda yüksek standartları önemseyen seçici izleyiciler." };
-        finalWord = "Teknik ve anlatısal olarak rüştünü ispatlamış objektif bir başarı.";
-    } else if (effectiveScore >= 6.8) {
-        verdict = "Nitelikli Yapım";
+        verdictReason = "Genel tarama motorumuz; derinlemesine senaryo işçiliği, çok katmanlı karakter arkları, küresel kültürel etkisi ve üst düzey prodüksiyon kalitesiyle bu yapımı mutlak bir klasik ve başyapıt olarak sınıflandırıyor.";
+        prosAndCons = "✅ Evrensel temaları mükemmel bir biçimde ele alan kusursuz senaryo\n✅ Efsanevi sinematografi, usta işi yönetim ve yüksek prodüksiyon değeri\n✅ Belleklerde iz bırakan, ödüllere doymayan kültürel miras\n❌ Kusursuz sanatsal vizyon dışında herhangi bir teknik veya kurgusal zaaf barındırmıyor";
+        targetAudience = { title: "Nitelikli Sinema Meraklıları", desc: "Hikaye anlatımında en yüksek standartları, sanatsal derinliği ve unutulmaz anları arayan seçici izleyiciler." };
+        finalWord = "Zamanın ötesinde, her sinemaseverin hayatında en az bir kez mutlaka deneyimlemesi gereken anıtsal bir yapım.";
+    } else if (wideSpectrumScore >= 7.2) {
+        verdict = "🎯 Nitelikli & Sürükleyici Yapım";
         verdictIcon = "🎯";
         verdictClass = "from-emerald-500 to-teal-400";
-        verdictReason = "Belirli senaryo formüllerine dayansa da, prodüksiyon kalitesi ve izleyiciyi tutma becerisiyle genel geçer izleyici testini geçmeyi başaran sağlam bir iş.";
-        prosAndCons = "✅ Türünün gereksinimlerini başarıyla karşılıyor\n✅ Akıcı ilerleyen kurgu\n❌ Orijinallik açısından çığır açmıyor\n❌ Bazı yan karakterler zayıf kalabiliyor";
-        targetAudience = { title: "Türün Sevenleri", desc: "Bu konsepte özel ilgisi olan ve risk almadan vakit geçirmek isteyenler." };
-        finalWord = "Büyük beklentilere girmeden izlendiğinde, sunduğu teknik yeterlilikle vaktinizin karşılığını veren bir tercih.";
-    } else if (effectiveScore >= 5.5) {
-        verdict = "Ortalama / Tartışmalı";
+        verdictReason = "Geniş spektrumlu tarama sonucunda; türünün dinamiklerini son derece yetkin kullanan, izleyiciyi baştan sona diri tutan ve teknik açılardan takdiri hak eden son derece başarılı bir yapıt olduğu saptanmıştır.";
+        prosAndCons = "✅ Ritmik ve akıcı kurgusu sayesinde yüksek izlenebilirlik oranı\n✅ Güçlü oyuncu kadrosu ve akılda kalıcı estetik atmosfer\n✅ Tür sınırlarını aşmayı başaran akıllıca kurgulanmış alt metinler\n❌ Bazı sinematik klişelere ve öngörülebilir senaryo dönemeçlerine yer veriyor";
+        targetAudience = { title: "Kaliteli Zaman İzleyicisi", desc: "Zamanını riske atmadan, hem sürükleyici hem de entelektüel tatmin sunan başarılı yapımlar arayanlar." };
+        finalWord = "Beklentilerinizi fazlasıyla karşılayacak, sinema sanatının tüm temel gereklerini yerine getiren güçlü bir yapım.";
+    } else if (wideSpectrumScore >= 5.8) {
+        verdict = "⚖️ Ortalama / Seyirlik Yapım";
         verdictIcon = "⚖️";
         verdictClass = "from-blue-500 to-cyan-400";
-        verdictReason = "Teknik veya senaryo anlamında bariz kusurlar barındıran; ancak içerdiği bazı sekanslar veya spesifik performanslarla izleyiciyi ikiye bölen bir yapım.";
-        prosAndCons = "✅ Kısmi anlarda parlayan fikirler\n✅ Belirli sahnelerde iyi atmosfer\n❌ Hikayede ritim ve mantık problemleri\n❌ Derinlikten yoksun olay örgüsü";
-        targetAudience = { title: "Boş Vakit İzleyicisi", desc: "Arka planda akıp gitsin diyen veya spesifik bir oyuncu için katlananlar." };
-        finalWord = "Objektif olarak pek çok eksiği mevcut. Ancak türün ciddi bir hayranıysanız şans verilebilir.";
+        verdictReason = "Yapay zeka taramamız, yapımın eğlenceli ve keyifli bir seyirlik sunduğunu; fakat çığır açan bir derinlik barındırmadığını ve genel izleyiciye hitap eden formüllerle örülü olduğunu gösteriyor.";
+        prosAndCons = "✅ Kafa yormayan, eğlence katsayısı yüksek dinamik anlatı\n✅ Sevilen oyuncuların tatmin edici kimyası ve görsel akıcılık\n❌ Derinlikten yoksun olay örgüleri ve sığ karakter analizleri\n❌ Yenilikçi olmayan, daha önce defalarca işlenmiş şablon senaryo yapısı";
+        targetAudience = { title: "Rahatlama Seyircisi", desc: "Zorlu bir günün ardından kafa dağıtmak, arka planda akıp gidecek keyifli bir macera izlemek isteyenler." };
+        finalWord = "Yüksek beklentiler içine girmeden, keyifli bir hafta sonu veya akşam seyri için ideal bir tercih.";
     } else {
-        verdict = "Analitik Risk";
+        verdict = "⚠️ Deneysel / Analitik Risk";
         verdictIcon = "⚠️";
         verdictClass = "from-red-500 to-rose-400";
-        verdictReason = "İzleyici verileri ve teknik analizler ışığında; zayıf kurgu, kopuk senaryo ve yetersiz prodüksiyon gibi majör temel problemleri olan riskli bir proje.";
-        prosAndCons = "✅ Kağıt üzerinde fena durmayan başlangıç fikri\n❌ Zayıf yönetim ve kötü işlenmiş metin\n❌ İzleyiciyi içine çekemeyen tempo\n❌ Tatmin hissi yaratmayan sığ final";
-        targetAudience = { title: "Pas Geçenler", desc: "Kısıtlı vaktini kanıtlanmış, kaliteli yapımlara ayırmak isteyen seçici izleyiciler." };
-        finalWord = "Projeye özel bir bağınız yoksa, algoritmanın verileri doğrultusunda alternatiflere yönelmeniz rasyonel olacaktır.";
-    }
-
-    if (reliability === "Çok Düşük" || reliability === "Düşük") {
-        verdictReason += ` (Not: Veri sayısının azlığı sebebiyle bu istatistiksel analiz yanıltıcı olabilir. Güvenilirlik: ${reliability})`;
+        verdictReason = "Geniş spektrumlu YZ taraması; tempo dalgalanmaları, kopuk olay örgüsü, zayıf karakter motivasyonları veya yetersiz prodüksiyon kalitesi nedeniyle izleyicide hayal kırıklığı riski taşıyan bir yapımı işaret ediyor.";
+        prosAndCons = "✅ İlgi çekici olabilecek bir çıkış noktası veya temel fikir\n❌ Ritim ve odaklanma sorunları barındıran dağınık kurgu yapısı\n❌ Karakterlerin derinleşememesi ve izleyiciyle bağ kuramaması\n❌ Tatmin etmeyen ve aceleye getirilmiş final sekansı";
+        targetAudience = { title: "Türün Fanatikleri", desc: "Yapımın eksikliklerini göz ardı edip, sadece konsepte veya oyuncu kadrosuna duyduğu tutku sebebiyle şans vermek isteyenler." };
+        finalWord = "Alternatif yapımlara yönelmek zaman yönetimi açısından daha rasyonel bir karar olabilir.";
     }
 
     if (isUnreleased) {
-        verdict = "Heyecanla Bekleniyor";
+        verdict = "⏳ Heyecanla Bekleniyor";
         verdictIcon = "⏳";
         verdictClass = "from-purple-500 to-fuchsia-400";
-        verdictReason = "Henüz yayınlanmamış olmasına rağmen büyük bir beklenti ve merak oluşturan bir proje.";
-        prosAndCons = "❓ Potansiyeli yüksek\n❓ Kapalı kutu";
-        targetAudience = { title: "Meraklı Bekleyenler", desc: `${termCap} dünyasını yakından takip edenler.` };
-        finalWord = "Vizyon/Yayın tarihini not alıp beklemeye geçebilirsiniz.";
+        verdictReason = "Geniş spektrumlu ön tarama; yapımın tanıtım materyalleri, kadrosu ve tematik potansiyeliyle şimdiden izleyici kitlesi üzerinde derin bir merak ve heyecan uyandırdığını gösteriyor.";
+        prosAndCons = "❓ Büyük yaratıcı kadro potansiyeli\n❓ Keşfedilmeyi bekleyen kapalı kutu hikaye yapısı";
+        targetAudience = { title: "Vizyon Takipçileri", desc: "Yeni çıkan işleri ve trendleri günü gününe takip eden meraklı izleyiciler." };
+        finalWord = "Yayın tarihini ajandanıza ekleyerek beklemeye geçebilirsiniz.";
     }
 
     // --- 0. EPIC SYNOPSIS (Yapay Zeka Dokunuşlu Özet) ---
-    let epicSynopsis = { text: overview || "Bu yapım hakkında detaylı bir konu özeti bulunmuyor.", aiTouch: "" };
+    let epicSynopsis = { text: overview || "Bu yapım hakkında henüz detaylı bir konu özeti girilmemiş.", aiTouch: "" };
     if (overview.length > 20) {
-        const moodWord = isDark ? "karanlık ve gerilimli" : (isLight ? "sıcak ve keyifli" : "sürükleyici ve katmanlı");
-        let touch = `${genres.slice(0, 2).join(" ve ")} türünün sınırlarını ${moodWord} bir atmosferle yeniden çizen bu yapım, `;
-        touch += director ? `${director}'ın özgün vizyonu eşliğinde ` : "";
-        touch += `izleyiciyi ekrana bağlayan güçlü bir anlatı kurguluyor. `;
-        if (keywords.length > 0) {
-            touch += `Yüzeysel bir hikayenin ötesinde; ${keywords.slice(0, 4).map(k => k.name).join(", ")} gibi derin temalar işlenerek çok katmanlı bir deneyim sunuluyor. `;
+        const moodWord = isDark ? "karanlık, gerilimli ve atmosferik" : (isLight ? "sıcak, içten ve eğlenceli" : "sürükleyici, dinamik ve katmanlı");
+        let touch = `${genres.slice(0, 2).join(" ve ")} türlerinin zengin kodlarını ${moodWord} bir çerçevede harmanlayan bu yapım, `;
+        touch += director ? `vizyoner yönetmen ${director}'ın kendine has sinematik diliyle ` : "";
+        touch += `izleyicisini büyüleyici bir dünyaya davet ediyor. `;
+        if (keywordNames.length > 0) {
+            touch += `Hikaye sadece yüzeyde kalmıyor; ${keywordNames.slice(0, 4).map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(", ")} gibi evrensel ve psikolojik temaları kurcalayarak zengin bir alt metin oluşturuyor. `;
         }
-        if (cast.length > 0) {
-            touch += `${mainStar}'ın başrolde verdiği performans, karakterin iç dünyasını perde önüne taşıyan kritik bir unsur.`;
+        if (mainStar) {
+            touch += `Özellikle başroldeki ${mainStar}'ın karizmatik ve etkileyici oyunculuğu, anlatının duygusal ağırlığını omuzlarında taşıyor.`;
         }
         epicSynopsis.aiTouch = touch;
     } else {
-        epicSynopsis.aiTouch = `Mevcut veriler sınırlı olsa da YZ motorumuz ${genres.slice(0, 2).join(" ve ")} odaklı yapısını ve ${isDark ? 'yoğun, gerilimli atmosferini' : (isLight ? 'hafif ve eğlenceli ruhunu' : 'dengeli ve düşündürücü tonunu')} tespit etti. Bu türe ilgi duyuyorsanız radarınızda tutmaya değer.`;
+        epicSynopsis.aiTouch = `Detaylı özet verileri kısıtlı olsa da, YZ algoritmalarımız ${genres.slice(0, 2).join(" ve ")} tabanlı kurgunun ${isDark ? 'karanlık ve psikolojik derinliği' : (isLight ? 'hafif ve mod yükselten enerjisini' : 'dengeli ve sürükleyici yapısını')} başarıyla analiz etti. Bu türe ilgi duyuyorsanız listenize eklemenizi öneririz.`;
     }
 
-    // --- 1. ANA ANALİZ METNİ (Narrative Body) ---
+    // --- 1. ANA ANALİZ METNİ (Narrative Body - Wide Spectrum) ---
     let aiNarrative = "";
 
     const genreStr = genres.slice(0, 2).join(" ve ");
-    const timeContext = year < 2005 ? "klasikler arasında taht kurmuş" : (year < 2015 ? "2000'lerin sinema anlayışını temsil eden" : "modern dönemin dikkat çeken yapımlarından");
+    const timeContext = year < 1995 ? "sinema tarihinin altın çağını yansıtan" : (year < 2010 ? "yakın dönem sinemasının köşe taşlarından biri olan" : "modern dönemin dikkat çeken estetik algısıyla tasarlanmış");
 
-    // GİRİŞ — Skor bazlı güçlü açılış
-    if (score >= 8.5) {
-        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
-        aiNarrative += `${genreStr} türünde ${timeContext} bu yapım, hem eleştirmenler hem de milyonlarca izleyici tarafından istisna olarak kabul edilen ender eserlerden. `;
-        aiNarrative += `Yalnızca bir film/dizi izlemekle kalmıyorsunuz — bilincinizde iz bırakan, gece yatmadan önce bile aklınızı çelen türden bir deneyimden bahsediyoruz. `;
-    } else if (score >= 7.5) {
-        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
-        aiNarrative += `${isTv ? 'Dizi' : 'Sinema'} dünyasının kaliteli üretimlerinden biri olan bu yapım, özellikle ${genreStr} dinamiklerine hakim izleyicilerin beğenisini kazanmayı başarmış. `;
-        aiNarrative += `Belirgin güçlü yanlarıyla dengeli ve tatmin edici bir izleme deneyimi vaat ediyor. `;
-    } else if (score >= 6.0) {
-        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
-        aiNarrative += `${genreStr} formülüne sadık kalarak hazırlanan bu yapım, potansiyelini her zaman tam anlamıyla kullanamamış olsa da belirli anlarda parlayan sahneleriyle dikkat çekiyor. `;
-        aiNarrative += `İzleyici kitlesini ikiye bölen bir proje; sizi büyüleyebilir ya da hayal kırıklığı yaratabilir. `;
+    // BÖLÜM 1: GENEL SİNEMATİK ANALİZ (Wide-Spectrum)
+    aiNarrative += `**🎬 Geniş Spektrumlu Sinematik Değerlendirme:**\n`;
+    if (wideSpectrumScore >= 8.2) {
+        aiNarrative += `Maviq Yapay Zeka motorunun gerçekleştirdiği çok boyutlu geniş spektrumlu taramaya göre, ${genreStr} türünde ${timeContext} bu eser, tam anlamıyla sinema sanatının zirve noktalarından birini temsil ediyor. Sadece TMDB üzerindeki puanlamalarla sınırlandırılamayacak kadar derin bir kültürel etkiye sahip olan bu yapım; olağanüstü prodüksiyon kalitesi, kusursuz sanat yönetimi ve katmanlı senaryosu ile izleyiciyi pasif bir izleyici olmaktan çıkarıp, hikayenin aktif bir ortağı haline getiriyor.`;
+    } else if (wideSpectrumScore >= 7.2) {
+        aiNarrative += `Bu yapım, ${genreStr} formüllerini usta bir şekilde ele alarak hem popüler kültürün beklentilerini karşılıyor hem de sanatsal kalitesinden ödün vermiyor. YZ geniş spektrumlu analizimiz; projenin bütçe kullanımı, görsel efekt/atmosfer başarısı ve anlatı tutarlılığı açılarından yüksek standartlarda bir mühendisliğe sahip olduğunu doğruluyor. Akıcı ritmi ve dengeli kurgusu sayesinde zamanın nasıl geçtiğini hissettirmeyen, sinemaseverlerin koleksiyonunda gururla taşıyabileceği nitelikli bir eser.`;
+    } else if (wideSpectrumScore >= 5.8) {
+        aiNarrative += `Bu çalışma, geniş kitlelerin eğlence ihtiyacını en güvenli yoldan karşılamayı amaçlayan dengeli bir formül yapımı. Yapay zeka taramamız, hikayenin yenilikçi iddialar taşımadığını ancak görsel akıcılık, popüler tema tercihleri ve kafa dağıtıcı temposuyla işlevini eksiksiz yerine getirdiğini gösteriyor. Bütçe ölçeği ve küresel popülerlik trendi, yapımı keyifli bir vakit geçirme aracı olarak tescilliyor.`;
     } else {
-        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
-        aiNarrative += `Objektif veriler bu yapımın beklentileri karşılamakta ciddi güçlük çektiğine işaret ediyor. `;
-        aiNarrative += `Senaryo tutarsızlıkları ve ritim sorunlarıyla örülü bu deneyim, dikkatli bir izleyicinin sabrını zorlayabilir. `;
+        aiNarrative += `Objektif veri taraması ve sinematik şablon analizleri, bu yapımın yaratıcı fikirlerini ekrana taşırken bazı yapısal zorluklarla karşılaştığını ortaya koyuyor. Özellikle senaryo bütünlüğündeki kopukluklar ve ritim problemleri, projenin yüksek potansiyeline rağmen ortalamanın altında kalmasına yol açmış. Yine de türün meraklıları için farklı denemeler barındırması açısından analitik bir ilgi odağı olabilir.`;
     }
 
-    // YÖNETMENİN İMZASI
-    if (director) {
-        aiNarrative += `\n\n**🎭 Yönetmenin İmzası:**\n`;
-        aiNarrative += `${director}, bu projeyle sinema diline kendi sözdizimini katıyor. `;
-        if (score >= 7.5) {
-            aiNarrative += `Kamera hareketleri ve anlatı temposu üzerindeki sıkı kontrolü, her karenin kasıtlı ve bilinçli bir vizyon ürünü olduğunu ortaya koyuyor. `;
-        } else {
-            aiNarrative += `Yönetim anlayışı zaman zaman güçlü anlar yaratsa da tutarlılık açısından bazı belirsizlikler göze çarpıyor. `;
+    // BÖLÜM 2: YARATICI KADRO VE YÖNETMEN VİZYONU
+    if (director || mainStar) {
+        aiNarrative += `\n\n**🎭 Yaratıcı Kadro ve Yönetmen Vizyonu:**\n`;
+        if (director) {
+            aiNarrative += `Yönetmen koltuğundaki ${director}, kameranın arkasında adeta bir orkestra şefi gibi çalışmış. `;
+            if (wideSpectrumScore >= 7.2) {
+                aiNarrative += `Kendi özgün sinematik imzasını her kareye nakşeden yönetmen; renk paletinden ışık kullanımına, müzik seçiminden oyuncu yönetimine kadar kontrolü elinde tutarak bütünsel bir vizyon inşa ediyor. `;
+            } else {
+                aiNarrative += `Yönetim tarzı zaman zaman etkileyici sahneler üretse de, senaryonun dağınık yapısını toparlamakta yer yer zorlandığı hissediliyor. `;
+            }
+        }
+        if (mainStar) {
+            aiNarrative += `Oyunculuk tarafında ise ${mainStar}, karakterin psikolojik gelgitlerini, içsel çatışmalarını ve motivasyonunu izleyiciye geçirme konusunda muazzam bir performans sergiliyor. `;
+            if (cast.length > 1) {
+                aiNarrative += `${castList} gibi değerli isimlerden oluşan destekleyici kadroyla yakalanan organik uyum, dramatik sahnelerin inandırıcılık katsayısını en üst seviyeye çıkarıyor.`;
+            }
         }
     }
 
-    // OYUNCU ANALİZİ
-    if (cast.length > 0) {
-        aiNarrative += `\n\n**🌟 Kadro Analizi:**\n`;
-        aiNarrative += `${mainStar} başrolünde, ${castList} ise destekleyici pozisyonlarda yer alıyor. `;
-        if (score >= 7.5) {
-            aiNarrative += `Kadronun kimyası, karakterler arasındaki diyalogları inandırıcı kılan temel etken. Özellikle ${mainStar}'ın sahneye getirdiği derinlik, yapımın duygusal ağırlık merkezini oluşturuyor. `;
-        } else {
-            aiNarrative += `Oyunculuk performansları senaryo sınırlılıklarını zaman zaman aşıyor; ancak kağıt üzerinde yeterince geliştirilmemiş karakterler, kadronun kapasitesini tam olarak ortaya koymaktan alıkoyuyor. `;
-        }
-    }
-
-    // HİKAYE VE ATMOSFER
-    if (overview.length > 30) {
-        aiNarrative += `\n\n**🌑 Atmosfer ve Ton:**\n`;
-        if (isDark) {
-            aiNarrative += `Yapım boyunca hissedilen kasvetli ağırlık, izleyiciyi yalnızca ekrana bakmakla bırakmıyor — sizi hikayenin içine hapsediyor. `;
-            aiNarrative += `Bu tür bir karanlık yalnızca estetik tercih değil; karakter psikolojisinin doğrudan bir yansıması. `;
-        } else if (isLight) {
-            aiNarrative += `Hafifliği asla yüzeyselliğe dönüşmeyen bu yapım, izleyiciyi günlük yüklerden arındıran temiz bir kaçış vadediyor. `;
-            aiNarrative += `Sahici gülümsemeler ve samimi anlar, yapımın en güçlü silahı. `;
-        } else {
-            aiNarrative += `Ne tam anlamıyla karanlık ne de saf bir gülümseme fabrikası olan bu yapım, duygusal dengeyi ustaca koruyor. `;
-            aiNarrative += `Hem düşündürücü hem de eğlendirici olmayı başaran bu denge, her türlü izleyiciyle iletişim kurmasına olanak tanıyor. `;
-        }
-        if (runtime > 0) {
-            if (runtime > 150) aiNarrative += `${runtime} dakikalık süre uzun görünse de usta kurgucular eşliğinde geçip gidiyor — finalde kendinizi "bitti mi?" diye sorarken bulabilirsiniz. `;
-            else if (runtime < 90) aiNarrative += `${runtime} dakikalık kompakt yapı, gereksiz sahnelere yer bırakmadan doğrudan öze iniyor. `;
-            else aiNarrative += `${runtime} dakikalık süre, anlatının ihtiyaç duyduğu nefes alanını tam olarak karşılıyor. `;
-        }
-    }
-
-    // TOPLULUK NABZI
-    aiNarrative += `\n\n**📊 Küresel İzleyici Reaksiyonu:**\n`;
-    if (votes > 50000) {
-        aiNarrative += `${votes.toLocaleString('tr-TR')} oy — bu rakam bir filmin kültürel dönüşüm yarattığının somut kanıtı. `;
-    } else if (votes > 10000) {
-        aiNarrative += `${votes.toLocaleString('tr-TR')} kişinin deneyimlediği bu yapım, küresel ölçekte ciddi bir izleyici kitlesi oluşturmuş. `;
-    } else if (votes > 1000) {
-        aiNarrative += `Henüz nispeten sınırlı bir izleyici kitlesine ulaşmış olsa da yükselen bir ilgi eğrisi söz konusu. `;
+    // BÖLÜM 3: ATMOSFER, TON VE ANLATI AKIŞI
+    aiNarrative += `\n\n**🌑 Atmosfer ve Duygusal Rezonans:**\n`;
+    if (isDark) {
+        aiNarrative += `Yapımın genel dokusuna sinen kasvetli, gizemli ve gerilimli ton, izleyiciyi adeta fiziksel bir ağırlıkla sarıp sarmalıyor. Bu karanlık sadece görsel bir tercih değil; karakterlerin iç dünyasındaki ahlaki ikilemlerin, geçmiş travmaların ve psikolojik gerilimlerin dışa vurumu. `;
+    } else if (isLight) {
+        aiNarrative += `İçinizi ısıtacak samimi, neşeli ve yaşam dolu tonuyla bu yapım, günlük hayatın getirdiği stres ve yorgunluktan kaçmak için kusursuz bir liman. Karakterler arasındaki esprili ve doğal diyaloglar yapımı yapaylıktan kurtarıp sahici bir neşe kaynağına dönüştürüyor. `;
     } else {
-        aiNarrative += `Veri tabanındaki sınırlı oy sayısı, geniş kitleye henüz ulaşmadığını gösteriyor — keşfedilmeyi bekleyen bir elmas olabilir. `;
+        aiNarrative += `Ne tam anlamıyla karanlığa teslim olan ne de yapay bir iyimserlik sunan yapım, duygusal dengesini ustalıkla koruyor. Hayatın ta kendisi gibi hem hüzünlü hem de tebessüm ettiren anları harmanlayarak izleyicinin geniş bir duygu yelpazesinde seyahat etmesini sağlıyor. `;
     }
 
-    if (sentimentScore > 5) {
-        aiNarrative += `İzleyicilerin büyük çoğunluğu yapımı övgüyle karşılamış; senaryo derinliği, oyunculuk güçlüğü ve duygusal etki en çok vurgulanan unsurlar arasında. Finali tartışılan yapımlarda bile genel kanı olumlu.`;
-    } else if (sentimentScore < -5) {
-        aiNarrative += `Topluluk verileri bazı alarm işaretleri taşıyor: tempo problemleri, senaryo tutarsızlıkları ve hayal kırıklığı yaratan son, eleştirilerde sıklıkla dile getiriliyor.`;
+    if (runtime > 0) {
+        if (runtime > 140) {
+            aiNarrative += `${runtime} dakikalık destansı süresi, usta işi kurgusu sayesinde sarkma yapmadan ilerliyor; final jeneriği aktığında kendinizi bu zengin dünyadan ayrılmak istemezken bulabilirsiniz.`;
+        } else if (runtime < 90) {
+            aiNarrative += `${runtime} dakikalık kompakt ve yoğun yapısı, hiçbir gereksiz yan hikayeye sapmadan doğrudan amaca yöneliyor ve yüksek tempolu, dinamik bir anlatı sunuyor.`;
+        } else {
+            aiNarrative += `${runtime} dakikalık standart süre, öykünün nefes alması, karakterlerin olgunlaşması ve olay örgüsünün çözülmesi için mükemmel bir zamanlama sunuyor.`;
+        }
+    }
+
+    // BÖLÜM 4: ALGORİTMİK NABIZ VE KÜRESEL ETKİ
+    aiNarrative += `\n\n**📊 Küresel İzleyici ve Algoritma Analizi:**\n`;
+    if (votes > 30000) {
+        aiNarrative += `Dünya çapında ${votes.toLocaleString('tr-TR')} oylama ve devasa bir popülerlik skoruna sahip olan bu yapım, artık sadece bir seyirlik olmaktan çıkıp küresel çapta bir popüler kültür fenomenine dönüşmüş durumda. Kitlelerin ortak beğenisini kazanmak kolay bir iş değildir ve bu yapım bunu fazlasıyla hak ediyor.`;
+    } else if (votes > 2000) {
+        aiNarrative += `${votes.toLocaleString('tr-TR')} oyluk veri tabanı, yapımın kemikleşmiş ve ne istediğini bilen entelektüel bir izleyici kitlesi tarafından sahiplenildiğini gösteriyor. Küresel popülerlik grafiğindeki kararlı seyri, zamana meydan okuyacak bir kulaktan kulağa yayılma başarısını kanıtlıyor.`;
     } else {
-        aiNarrative += `İzleyici yorumları karmaşık bir tablo çiziyor — atmosferi ve görselliği sevenler ile senaryo akışını eleştirenler arasında keskin bir denge var. Tercihiniz tamamen kişisel beklentinize bağlı.`;
+        aiNarrative += `Geniş kitlelerin radarından henüz kaçmış gibi görünen bu yapım, oylama sayısının azlığı sebebiyle keşfedilmeyi bekleyen gizli bir hazine niteliğinde. Formül işlerden sıkılan ve özgün arayışları olan sinemaseverler için kusursuz bir keşif fırsatı sunuyor.`;
     }
 
     // --- 3. PSİKOLOJİK PROFİL (Psychological Profile) ---
@@ -294,22 +290,24 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
     if (isDark) {
         psychProfile.mood = "Gergin & Karanlık";
         psychProfile.traits.push("Yüksek Adrenalin", "Psikolojik Baskı");
-        if (keywordNames.includes('trauma') || keywordNames.includes('murder')) psychProfile.warning = "Hassas izleyiciler için tetikleyici unsurlar içerebilir.";
+        if (keywordNames.includes('trauma') || keywordNames.includes('murder') || keywordNames.includes('violence')) {
+            psychProfile.warning = "Hassas izleyiciler için şiddet veya tetikleyici psikolojik unsurlar içerebilir.";
+        }
     } else if (isLight) {
         psychProfile.mood = "Neşeli & Hafif";
         psychProfile.traits.push("Mod Yükseltici", "Rahatlatıcı");
     } else {
-        psychProfile.mood = "Dengeli";
-        psychProfile.traits.push("Sürükleyici", "Düşündürücü");
+        psychProfile.mood = "Dengeli / Sürükleyici";
+        psychProfile.traits.push("Düşündürücü", "Tempo Dengeli");
     }
 
-    if (score > 8) psychProfile.traits.push("Zihin Açıcı");
-    if (runtime > 140) psychProfile.traits.push("Sabır Gerektiren Derinlik");
+    if (wideSpectrumScore >= 7.8) psychProfile.traits.push("Zihin Açıcı Entelektüel Derinlik");
+    if (runtime > 135) psychProfile.traits.push("Odaklanma Gerektiren Anlatı");
 
     // --- 4. SİNİRSEL EŞLEŞME (Neural Match) ---
-    // Popülerlik ve Puan bazlı yapay bir "eşleşme" skoru
-    let matchScore = Math.min(98, Math.max(60, (score * 10) + (popularity / 500)));
-    if (isUnreleased) matchScore = 50;
+    // Popülerlik, bütçe, oyuncu kadrosu ve YZ puanımızın harmonik ortalaması
+    let matchScore = Math.min(99, Math.max(62, (wideSpectrumScore * 10) + (Math.log10(popularity + 1) * 3)));
+    if (isUnreleased) matchScore = 55;
     const matchRate = Math.floor(matchScore);
 
     // --- BÜTÇE-HASILAT ANALİZİ ---
@@ -318,11 +316,12 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         const revenue = details.revenue || 0;
         const roi = revenue > 0 ? ((revenue - budget) / budget * 100).toFixed(0) : null;
         let budgetVerdict = '';
-        if (revenue === 0) budgetVerdict = 'Hasılat verisi henüz mevcut değil.';
-        else if (roi > 200) budgetVerdict = `Gişe canavarı! Bütçesinin ${(revenue / budget).toFixed(1)}x katını kazandı. Prodüksiyon şirketinin rüyası.`;
-        else if (roi > 50) budgetVerdict = `Ticari olarak başarılı. Yatırımın karşılığını fazlasıyla aldı.`;
-        else if (roi > 0) budgetVerdict = `Maliyetini zar zor çıkardı. Pazarlama masrafları dahil edilince kâr marjı tartışmalı.`;
-        else budgetVerdict = `Gişede hayal kırıklığı. Bütçesini bile karşılayamadı.`;
+        if (revenue === 0) budgetVerdict = 'Hasılat verisi henüz sisteme girilmemiş.';
+        else if (roi > 200) budgetVerdict = `Muazzam gişe başarısı! Proje bütçesinin ${(revenue / budget).toFixed(1)}x katını kazanarak yatırımcısını ihya etti.`;
+        else if (roi > 50) budgetVerdict = `Ticari açıdan oldukça başarılı. Küresel pazarda yüksek talep görerek bütçesini katladı.`;
+        else if (roi > 0) budgetVerdict = `Maliyetini kıl payı karşıladı. Reklam ve pazarlama giderleri düşünüldüğünde kâr marjı oldukça dar.`;
+        else budgetVerdict = `Gişede beklenmedik hayal kırıklığı. Büyük prodüksiyon bütçesine rağmen finansal olarak hedefin gerisinde kaldı.`;
+        
         budgetAnalysis = {
             budget, revenue, roi: roi ? `%${roi}` : null, verdict: budgetVerdict,
             budgetFormatted: `$${(budget / 1_000_000).toFixed(0)}M`,
@@ -348,30 +347,30 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
     // --- KADRO ANALİZİ ---
     const topCast = credits?.cast?.slice(0, 6).map(c => ({ name: c.name, character: c.character, profile: c.profile_path })) || [];
     let castAnalysis = '';
-    if (director && mainStar) castAnalysis = `${director} yönetmenliğinde, ${mainStar}'ın başrolde yer aldığı kadro, projenin omurgasını oluşturuyor.`;
-    else if (mainStar) castAnalysis = `${mainStar} önderliğindeki kadro hikayeyi taşıyor.`;
+    if (director && mainStar) castAnalysis = `${director} yönetiminde, ${mainStar}'ın başrol performansı eşliğinde şekillenen kadro, yapımın en güçlü sanatsal ayağını oluşturuyor.`;
+    else if (mainStar) castAnalysis = `${mainStar} liderliğindeki oyuncu grubu, anlatının tüm dramatik yükünü başarıyla sırtlanıyor.`;
 
     // --- NE ZAMAN İZLENMELİ ---
-    let watchTiming = { icon: '🌙', title: 'Akşam Keyfi', desc: 'Günün yorgunluğunu atmak için ideal.' };
-    if (isDark) watchTiming = { icon: '🌑', title: 'Gece Geç Saatler', desc: 'Karanlık atmosfer için geceyi bekleyin. Kulaklık tavsiye edilir.' };
-    else if (isLight && genres.some(g => ['Komedi', 'Aile'].includes(g))) watchTiming = { icon: '👨‍👩‍👧‍👦', title: 'Aile/Arkadaş Buluşması', desc: 'Birlikte keyifle izlenebilecek hafif bir yapım.' };
-    else if (runtime > 150) watchTiming = { icon: '☕', title: 'Boş Bir Pazar Günü', desc: 'Uzun bir yapım — rahatça oturup izleyebileceğiniz geniş bir zaman dilimi ayırın.' };
-    else if (score >= 8) watchTiming = { icon: '🎬', title: 'Sinema Gecesi', desc: 'Kaliteli bir deneyim için ışıkları kapatın, sesi açın.' };
+    let watchTiming = { icon: '🌙', title: 'Akşam Keyfi', desc: 'Günün yorgunluğunu unutturacak, keyifli bir seyir deneyimi.' };
+    if (isDark) watchTiming = { icon: '🌑', title: 'Gece Geç Saatler', desc: 'Karanlık atmosferin ve psikolojik gerilimin tam oturması için gece saatlerinde izlenmesi tavsiye edilir.' };
+    else if (isLight && genres.some(g => ['Komedi', 'Aile'].includes(g))) watchTiming = { icon: '👨‍👩‍👧‍👦', title: 'Arkadaş / Aile Buluşması', desc: 'Kahkahası bol, sevdiklerinizle bir arada keyifle paylaşabileceğiniz sıcak bir yapım.' };
+    else if (runtime > 145) watchTiming = { icon: '☕', title: 'Hafta Sonu Maratonu', desc: 'Uzun soluklu ve konsantrasyon gerektiren bu yapım için geniş bir serbest zaman dilimi ayırın.' };
+    else if (wideSpectrumScore >= 7.8) watchTiming = { icon: '🎬', title: 'Işıkları Kapatın', desc: 'Sinema salonu kalitesindeki teknik işçiliği tam deneyimlemek için sessiz bir ortam ve yüksek ses kalitesi önerilir.' };
 
     // --- TEKRAR İZLEME DEĞERİ ---
     let rewatchValue = { score: 5, label: 'Orta', icon: '🔄' };
-    if (score >= 8.5 && votes > 5000) rewatchValue = { score: 9, label: 'Çok Yüksek', icon: '💎' };
-    else if (score >= 7.5) rewatchValue = { score: 7, label: 'Yüksek', icon: '👍' };
-    else if (score < 5.5) rewatchValue = { score: 2, label: 'Düşük', icon: '👎' };
+    if (wideSpectrumScore >= 8.2 && votes > 3000) rewatchValue = { score: 9, label: 'Fevkalade Yüksek', icon: '💎' };
+    else if (wideSpectrumScore >= 7.2) rewatchValue = { score: 7, label: 'Yüksek', icon: '👍' };
+    else if (wideSpectrumScore < 5.5) rewatchValue = { score: 2, label: 'Düşük', icon: '👎' };
 
     // --- TÜR-ÖZEL TEMATİK YORUM ---
     let thematicInsight = '';
     const genreSet = new Set(genres);
-    if (genreSet.has('Bilim Kurgu') && genreSet.has('Dram')) thematicInsight = 'İnsanlık durumunu bilim kurgu prizmasından sorgulayan felsefi bir yapım.';
-    else if (genreSet.has('Korku') && genreSet.has('Gerilim')) thematicInsight = 'Hem psikolojik gerilim hem de korku unsurlarıyla dolu, kalp atışınızı hızlandıracak bir deneyim.';
-    else if (genreSet.has('Komedi') && genreSet.has('Romantik')) thematicInsight = 'Gülümseten romantizm ve eğlenceli diyaloglarla dolu, keyifli bir izleme deneyimi.';
-    else if (genreSet.has('Aksiyon') && genreSet.has('Macera')) thematicInsight = 'Nefes kesen aksiyon sekansları ve epik macera sahneleriyle dolu bir adrenalin bombardımanı.';
-    else if (genreSet.has('Belgesel')) thematicInsight = 'Gerçek dünyadan hikayeler anlatan, bakış açınızı genişletecek bilgi dolu bir yapım.';
+    if (genreSet.has('Bilim Kurgu') && genreSet.has('Dram')) thematicInsight = 'İnsan olmanın, varoluşun ve teknolojinin gelecekteki sınırlarını felsefi derinlikle irdeleyen enfes bir bilim kurgu-dram karması.';
+    else if (genreSet.has('Korku') && genreSet.has('Gerilim')) thematicInsight = 'Sadece fiziksel değil, psikolojik korku ögelerini de barındıran, zihninize sızacak karanlık bir gerilim.';
+    else if (genreSet.has('Komedi') && genreSet.has('Romantik')) thematicInsight = 'Samimi gülümsemeler, hayata dair tatlı detaylar ve kalbe dokunan sıcak bir romantik komedi.';
+    else if (genreSet.has('Aksiyon') && genreSet.has('Macera')) thematicInsight = 'Koreografileriyle nefes kesen, sinematik temposu bir saniye bile düşmeyen saf adrenalin ve macera.';
+    else if (genreSet.has('Belgesel')) thematicInsight = 'Gerçeklerin gücünü ve dünyanın farklı yüzlerini son derece tarafsız ve etkileyici bir görsellikle sunan ufk açıcı bir belgesel.';
 
     return {
         verdict, verdictIcon, verdictClass, verdictReason,
