@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PlayCircle, Info, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlayCircle, Tv, Film, Star, ChevronLeft, ChevronRight, Dice5 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TMDB_API_KEY, TMDB_BASE_URL, BACKDROP_BASE_URL } from '../lib/constants.jsx';
 
@@ -98,13 +98,14 @@ const HeroSlider = () => {
                                     <PlayCircle className="w-5 h-5" />
                                     İncele
                                 </button>
-                                <button
-                                    onClick={() => navigate(`/${movie.media_type}/${movie.id}`)}
-                                    className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-5 py-2.5 md:px-8 md:py-3 rounded-full font-bold flex items-center gap-2 transition-all border border-white/10 text-sm md:text-base"
+                                <a
+                                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent((movie.title || movie.name) + ' fragman')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="bg-white/10 hover:bg-red-600/80 backdrop-blur-md text-white px-5 py-2.5 md:px-8 md:py-3 rounded-full font-bold flex items-center gap-2 transition-all border border-white/10 text-sm md:text-base"
                                 >
-                                    <Info className="w-5 h-5" />
-                                    Detaylar
-                                </button>
+                                    🎬 Fragman
+                                </a>
                             </div>
                         </div>
                     </div>

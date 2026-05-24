@@ -56,9 +56,21 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 const trailers = videosData.results?.filter(v => v.site === 'YouTube' && v.type === 'Trailer') || [];
                 setTrailerKey(trailers.length > 0 ? trailers[0].key : null);
 
-                // Yorumlar artık ekranda gösterilmediği için çeviri işlemine gerek yok,
-                // bunu kaldırmak sayfa yükleme hızını da artırır.
                 reviews = [];
+
+                // Konu özeti yoksa İngilizce'den çek ve çevir
+                if (!details.overview || details.overview.length < 20) {
+                    try {
+                        const enRes = await fetch(`${TMDB_BASE_URL}/${type}/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
+                        if (enRes.ok) {
+                            const enData = await enRes.json();
+                            if (enData.overview && enData.overview.length > 20) {
+                                const translated = await translateText(enData.overview, 'en', 'tr');
+                                details.overview = translated;
+                            }
+                        }
+                    } catch (_) {/* çeviri başarısız olursa boş bırak */}
+                }
 
                 // Providers
                 const trProviders = providersData.results?.TR;
@@ -127,10 +139,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
 
                     {/* LEFT COL: Poster & Platforms */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div
-                            className={`relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group ${trailerKey ? 'cursor-pointer' : ''}`}
-                            onClick={() => trailerKey && setShowTrailer(true)}
-                        >
+                        <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
                             {movie.poster_path ? (
                                 <img src={`${IMAGE_BASE_URL}${movie.poster_path}`} className="w-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Poster" />
                             ) : (
@@ -139,14 +148,15 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 </div>
                             )}
 
-                            {/* Fragman Butonu Overlay */}
+                            {/* Fragman Butonu - Her zaman görünür */}
                             {trailerKey && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                    <div className="flex flex-col items-center gap-2 text-white">
-                                        <PlayCircle className="w-16 h-16" />
-                                        <span className="text-sm font-bold">Fragman İzle</span>
-                                    </div>
-                                </div>
+                                <button
+                                    onClick={() => setShowTrailer(true)}
+                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg border border-white/20 whitespace-nowrap"
+                                >
+                                    <PlayCircle className="w-5 h-5 shrink-0" />
+                                    <span>🎬 Fragmanı İzle</span>
+                                </button>
                             )}
 
                             <div className={`absolute top-4 left-4 text-white text-xs font-bold px-3 py-1 rounded-md border border-white/10 shadow-lg ${type === 'tv' ? 'bg-cyan-600' : 'bg-slate-900'}`}>
@@ -453,26 +463,35 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 )}
             </div>
 
-            {/* TRAILER MODAL */}
+            {/* TRAILER MODAL - Ekran ortasında, boşluksuz */}
             {showTrailer && trailerKey && (
-                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-5xl">
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300"
+                    onClick={() => setShowTrailer(false)}
+                >
+                    <div
+                        className="relative w-[95vw] max-w-4xl"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Kapat Butonu */}
                         <button
                             onClick={() => setShowTrailer(false)}
-                            className="absolute -top-12 right-0 text-white hover:text-red-500 transition flex items-center gap-2 text-sm font-bold"
+                            className="absolute -top-10 right-0 text-white/70 hover:text-white transition flex items-center gap-2 text-sm font-bold"
                         >
                             <span>Kapat</span>
-                            <span className="text-2xl">✕</span>
+                            <span className="text-xl leading-none">✕</span>
                         </button>
-                        <div className="relative pt-[56.25%] bg-black rounded-xl overflow-hidden shadow-2xl">
+                        {/* 16:9 Video Container */}
+                        <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
                             <iframe
-                                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
-                                className="absolute inset-0 w-full h-full"
-                                allow="autoplay; encrypted-media"
+                                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+                                className="absolute inset-0 w-full h-full rounded-xl shadow-2xl"
+                                allow="autoplay; encrypted-media; fullscreen"
                                 allowFullScreen
-                                title="Trailer"
+                                title="Fragman"
                             />
                         </div>
+                        <p className="text-center text-slate-500 text-xs mt-3">Kapatmak için dışarıya tıkla</p>
                     </div>
                 </div>
             )}
