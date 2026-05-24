@@ -66,18 +66,14 @@ const Header = ({ watchlistCount }) => {
             <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4">
                 {/* Logo */}
                 <div
-                    className="w-full md:w-auto flex items-center justify-center md:justify-start cursor-pointer group relative z-50 order-1 md:pr-32 lg:pr-48"
+                    className="flex items-center justify-center md:justify-start cursor-pointer group shrink-0 order-1"
                     onClick={() => { setQuery(''); navigate('/'); }}
                 >
-                    <div className="relative flex items-center justify-center">
-                        {/* Subtle glow behind the transparent logo */}
-                        <div className="absolute inset-0 bg-red-500/20 blur-xl md:blur-[30px] rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                        <img
-                            src="/logo.png"
-                            alt="İzlenti"
-                            className="relative z-10 h-10 sm:h-12 md:h-14 w-auto object-contain transition-all duration-500 transform scale-[2.5] sm:scale-[3] md:scale-[3.5] origin-center md:origin-left group-hover:scale-[2.6] sm:group-hover:scale-[3.1] md:group-hover:scale-[3.6] group-hover:brightness-110 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]"
-                        />
-                    </div>
+                    <img
+                        src="/logo.png"
+                        alt="İzlenti"
+                        className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:scale-105 drop-shadow-[0_2px_16px_rgba(34,211,238,0.25)]"
+                    />
                 </div>
 
                 {/* Instant Search Form */}

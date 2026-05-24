@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Film, Star, PlayCircle, Award, ExternalLink, Heart, Clock,
@@ -121,7 +122,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
     const links = getExternalLinks(movie, type);
 
     return (
-        <div className="animate-in zoom-in-95 duration-500 pb-20 relative">
+        <div className="pb-20 relative">
             {/* Background */}
             {movie.backdrop_path && (
                 <div className="fixed inset-0 z-0 animate-in fade-in duration-1000">
@@ -466,10 +467,16 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 )}
             </div>
 
-            {/* TRAILER MODAL — viewport'un tam ortasında açılır, scroll yoktur */}
-            {showTrailer && trailerKey && (
+            {/* TRAILER MODAL — createPortal ile body'e render edilir, scroll sorununu önler */}
+            {showTrailer && trailerKey && createPortal(
                 <div
-                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.95)' }}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        zIndex: 999999,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.96)',
+                        backdropFilter: 'blur(8px)'
+                    }}
                     onClick={() => setShowTrailer(false)}
                 >
                     <div
@@ -478,24 +485,35 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                     >
                         <button
                             onClick={() => setShowTrailer(false)}
-                            style={{ position: 'absolute', top: '-40px', right: 0, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
+                            style={{
+                                position: 'absolute', top: '-44px', right: 0,
+                                color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: '14px',
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '999px', padding: '6px 14px', cursor: 'pointer'
+                            }}
                         >
+                            <span>✕</span>
                             <span>Kapat</span>
-                            <span style={{ fontSize: '20px' }}>✕</span>
                         </button>
-                        {/* 16:9 oranında video */}
                         <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
                             <iframe
                                 src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
-                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '12px' }}
+                                style={{
+                                    position: 'absolute', top: 0, left: 0,
+                                    width: '100%', height: '100%',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 25px 60px rgba(0,0,0,0.8)'
+                                }}
                                 allow="autoplay; encrypted-media; fullscreen"
                                 allowFullScreen
                                 title="Fragman"
                             />
                         </div>
-                        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '10px' }}>Dışarıya tıklayarak kapat</p>
+                        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '12px', marginTop: '12px' }}>Dışarıya tıklayarak kapat</p>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

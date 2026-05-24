@@ -182,54 +182,106 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
     // --- 0. EPIC SYNOPSIS (Yapay Zeka Dokunuşlu Özet) ---
     let epicSynopsis = { text: overview || "Bu yapım hakkında detaylı bir konu özeti bulunmuyor.", aiTouch: "" };
     if (overview.length > 20) {
-        let touch = isDark ? `İzleyiciyi karanlık ve gerilimli bir atmosfere çeken bu yapım, ` : (isLight ? `Sıcak ve eğlenceli kurgusuyla öne çıkarak, ` : `Karakterlerin içsel çatışmalarını güçlü bir şekilde hissettirerek, `);
-        touch += `özellikle ${genres.slice(0, 2).join(" ve ")} dinamiklerini harmanlıyor. `;
+        const moodWord = isDark ? "karanlık ve gerilimli" : (isLight ? "sıcak ve keyifli" : "sürükleyici ve katmanlı");
+        let touch = `${genres.slice(0, 2).join(" ve ")} türünün sınırlarını ${moodWord} bir atmosferle yeniden çizen bu yapım, `;
+        touch += director ? `${director}'ın özgün vizyonu eşliğinde ` : "";
+        touch += `izleyiciyi ekrana bağlayan güçlü bir anlatı kurguluyor. `;
         if (keywords.length > 0) {
-            touch += `Alt metinlerinde yatan ${keywords.slice(0, 3).map(k => k.name).join(", ")} gibi temalar hikayeyi çok daha katmanlı bir boyuta taşıyor.`;
+            touch += `Yüzeysel bir hikayenin ötesinde; ${keywords.slice(0, 4).map(k => k.name).join(", ")} gibi derin temalar işlenerek çok katmanlı bir deneyim sunuluyor. `;
+        }
+        if (cast.length > 0) {
+            touch += `${mainStar}'ın başrolde verdiği performans, karakterin iç dünyasını perde önüne taşıyan kritik bir unsur.`;
         }
         epicSynopsis.aiTouch = touch;
     } else {
-        epicSynopsis.aiTouch = `Detaylı bir özet bulunmasa da, YZ analizlerimize göre ${genres.slice(0, 2).join(" ve ")} odaklı yapısı ve sunduğu ${isDark ? 'gerilimli' : (isLight ? 'eğlenceli' : 'derin')} atmosfer ile radarınızda olması gereken bir ${termCap}.`;
+        epicSynopsis.aiTouch = `Mevcut veriler sınırlı olsa da YZ motorumuz ${genres.slice(0, 2).join(" ve ")} odaklı yapısını ve ${isDark ? 'yoğun, gerilimli atmosferini' : (isLight ? 'hafif ve eğlenceli ruhunu' : 'dengeli ve düşündürücü tonunu')} tespit etti. Bu türe ilgi duyuyorsanız radarınızda tutmaya değer.`;
     }
 
     // --- 1. ANA ANALİZ METNİ (Narrative Body) ---
     let aiNarrative = "";
 
     const genreStr = genres.slice(0, 2).join(" ve ");
-    const timeContext = year < 2005 ? "klasikleri arasında yerini alan" : "modern sinemanın örneklerinden biri olan";
+    const timeContext = year < 2005 ? "klasikler arasında taht kurmuş" : (year < 2015 ? "2000'lerin sinema anlayışını temsil eden" : "modern dönemin dikkat çeken yapımlarından");
 
-    // GİRİŞ: Bağlam
+    // GİRİŞ — Skor bazlı güçlü açılış
     if (score >= 8.5) {
-        aiNarrative += `**Genel Bakış:**\n${genreStr} türünde, ${timeContext} bu yapım, izleyici ve eleştirmenlerden tam not almayı başarmış ender işlerden. `;
+        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
+        aiNarrative += `${genreStr} türünde ${timeContext} bu yapım, hem eleştirmenler hem de milyonlarca izleyici tarafından istisna olarak kabul edilen ender eserlerden. `;
+        aiNarrative += `Yalnızca bir film/dizi izlemekle kalmıyorsunuz — bilincinizde iz bırakan, gece yatmadan önce bile aklınızı çelen türden bir deneyimden bahsediyoruz. `;
     } else if (score >= 7.5) {
-        aiNarrative += `**Genel Bakış:**\n${isTv ? 'Televizyon' : 'Sinema'} dünyasında sağlam bir yer edinen, özellikle ${genreStr} tutkunlarını hedefleyen bir yapım. `;
+        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
+        aiNarrative += `${isTv ? 'Dizi' : 'Sinema'} dünyasının kaliteli üretimlerinden biri olan bu yapım, özellikle ${genreStr} dinamiklerine hakim izleyicilerin beğenisini kazanmayı başarmış. `;
+        aiNarrative += `Belirgin güçlü yanlarıyla dengeli ve tatmin edici bir izleme deneyimi vaat ediyor. `;
     } else if (score >= 6.0) {
-        aiNarrative += `**Genel Bakış:**\nİzleyiciyi ikiye bölen, potansiyeli yüksek ancak tartışmalı yönleri de olan bir ${term} projesi. `;
+        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
+        aiNarrative += `${genreStr} formülüne sadık kalarak hazırlanan bu yapım, potansiyelini her zaman tam anlamıyla kullanamamış olsa da belirli anlarda parlayan sahneleriyle dikkat çekiyor. `;
+        aiNarrative += `İzleyici kitlesini ikiye bölen bir proje; sizi büyüleyebilir ya da hayal kırıklığı yaratabilir. `;
     } else {
-        aiNarrative += `**Genel Bakış:**\nBeklentileri tam olarak karşılayamayan, ancak belirli bir kitleye hitap etmeye çalışan bir ${term}. `;
+        aiNarrative += `**🎬 Sinematik Değerlendirme:**\n`;
+        aiNarrative += `Objektif veriler bu yapımın beklentileri karşılamakta ciddi güçlük çektiğine işaret ediyor. `;
+        aiNarrative += `Senaryo tutarsızlıkları ve ritim sorunlarıyla örülü bu deneyim, dikkatli bir izleyicinin sabrını zorlayabilir. `;
     }
 
-    // GELİŞME: Kadro ve Hikaye
-    if (director) aiNarrative += `Yönetmen koltuğunda oturan ${director}, bu projede kendi imzasını hissettiriyor. `;
-    if (cast.length > 0) aiNarrative += `${mainStar} önderliğindeki oyuncu kadrosu (${castList}), karakterlere hayat verirken hikayenin atmosferini güçlendiriyor. \n\n`;
+    // YÖNETMENİN İMZASI
+    if (director) {
+        aiNarrative += `\n\n**🎭 Yönetmenin İmzası:**\n`;
+        aiNarrative += `${director}, bu projeyle sinema diline kendi sözdizimini katıyor. `;
+        if (score >= 7.5) {
+            aiNarrative += `Kamera hareketleri ve anlatı temposu üzerindeki sıkı kontrolü, her karenin kasıtlı ve bilinçli bir vizyon ürünü olduğunu ortaya koyuyor. `;
+        } else {
+            aiNarrative += `Yönetim anlayışı zaman zaman güçlü anlar yaratsa da tutarlılık açısından bazı belirsizlikler göze çarpıyor. `;
+        }
+    }
 
+    // OYUNCU ANALİZİ
+    if (cast.length > 0) {
+        aiNarrative += `\n\n**🌟 Kadro Analizi:**\n`;
+        aiNarrative += `${mainStar} başrolünde, ${castList} ise destekleyici pozisyonlarda yer alıyor. `;
+        if (score >= 7.5) {
+            aiNarrative += `Kadronun kimyası, karakterler arasındaki diyalogları inandırıcı kılan temel etken. Özellikle ${mainStar}'ın sahneye getirdiği derinlik, yapımın duygusal ağırlık merkezini oluşturuyor. `;
+        } else {
+            aiNarrative += `Oyunculuk performansları senaryo sınırlılıklarını zaman zaman aşıyor; ancak kağıt üzerinde yeterince geliştirilmemiş karakterler, kadronun kapasitesini tam olarak ortaya koymaktan alıkoyuyor. `;
+        }
+    }
+
+    // HİKAYE VE ATMOSFER
     if (overview.length > 30) {
-        aiNarrative += `**Hikaye ve Atmosfer:**\nYapım, izleyiciyi ${isDark ? 'gerilimli ve karanlık' : (isLight ? 'sıcak ve samimi' : 'sürükleyici')} bir atmosferin içine çekiyor. `;
-        aiNarrative += `Senaryo örgüsü, karakterlerin derinliklerine inerek izleyiciyle duygusal bir bağ kurmayı amaçlıyor. `;
+        aiNarrative += `\n\n**🌑 Atmosfer ve Ton:**\n`;
+        if (isDark) {
+            aiNarrative += `Yapım boyunca hissedilen kasvetli ağırlık, izleyiciyi yalnızca ekrana bakmakla bırakmıyor — sizi hikayenin içine hapsediyor. `;
+            aiNarrative += `Bu tür bir karanlık yalnızca estetik tercih değil; karakter psikolojisinin doğrudan bir yansıması. `;
+        } else if (isLight) {
+            aiNarrative += `Hafifliği asla yüzeyselliğe dönüşmeyen bu yapım, izleyiciyi günlük yüklerden arındıran temiz bir kaçış vadediyor. `;
+            aiNarrative += `Sahici gülümsemeler ve samimi anlar, yapımın en güçlü silahı. `;
+        } else {
+            aiNarrative += `Ne tam anlamıyla karanlık ne de saf bir gülümseme fabrikası olan bu yapım, duygusal dengeyi ustaca koruyor. `;
+            aiNarrative += `Hem düşündürücü hem de eğlendirici olmayı başaran bu denge, her türlü izleyiciyle iletişim kurmasına olanak tanıyor. `;
+        }
+        if (runtime > 0) {
+            if (runtime > 150) aiNarrative += `${runtime} dakikalık süre uzun görünse de usta kurgucular eşliğinde geçip gidiyor — finalde kendinizi "bitti mi?" diye sorarken bulabilirsiniz. `;
+            else if (runtime < 90) aiNarrative += `${runtime} dakikalık kompakt yapı, gereksiz sahnelere yer bırakmadan doğrudan öze iniyor. `;
+            else aiNarrative += `${runtime} dakikalık süre, anlatının ihtiyaç duyduğu nefes alanını tam olarak karşılıyor. `;
+        }
     }
 
-    // TOPLULUK GÖRÜŞÜ
-    aiNarrative += `\n\n**Topluluk Nabzı:**\n`;
-    if (votes > 10000) {
-        aiNarrative += `Global çapta ulaşlan ${votes.toLocaleString()} kişilik izleyici kitlesi, projenin popüler kültürdeki etkisini kanıtlar nitelikte. `;
+    // TOPLULUK NABZI
+    aiNarrative += `\n\n**📊 Küresel İzleyici Reaksiyonu:**\n`;
+    if (votes > 50000) {
+        aiNarrative += `${votes.toLocaleString('tr-TR')} oy — bu rakam bir filmin kültürel dönüşüm yarattığının somut kanıtı. `;
+    } else if (votes > 10000) {
+        aiNarrative += `${votes.toLocaleString('tr-TR')} kişinin deneyimlediği bu yapım, küresel ölçekte ciddi bir izleyici kitlesi oluşturmuş. `;
+    } else if (votes > 1000) {
+        aiNarrative += `Henüz nispeten sınırlı bir izleyici kitlesine ulaşmış olsa da yükselen bir ilgi eğrisi söz konusu. `;
+    } else {
+        aiNarrative += `Veri tabanındaki sınırlı oy sayısı, geniş kitleye henüz ulaşmadığını gösteriyor — keşfedilmeyi bekleyen bir elmas olabilir. `;
     }
 
     if (sentimentScore > 5) {
-        aiNarrative += `İzleyici yorumları incelendiğinde; senaryo derinliği ve oyunculuk performanslarının öne çıktığı görülüyor. Çoğu izleyici finalden ve genel kaliteden memnun.`;
+        aiNarrative += `İzleyicilerin büyük çoğunluğu yapımı övgüyle karşılamış; senaryo derinliği, oyunculuk güçlüğü ve duygusal etki en çok vurgulanan unsurlar arasında. Finali tartışılan yapımlarda bile genel kanı olumlu.`;
     } else if (sentimentScore < -5) {
-        aiNarrative += `Topluluk geri bildirimleri; bazı tempo sorunlarına ve senaryo boşluklarına işaret ediyor. İzleyicilerin bir kısmı potansiyelin tam değerlendirilemediği görüşünde.`;
+        aiNarrative += `Topluluk verileri bazı alarm işaretleri taşıyor: tempo problemleri, senaryo tutarsızlıkları ve hayal kırıklığı yaratan son, eleştirilerde sıklıkla dile getiriliyor.`;
     } else {
-        aiNarrative += `Görüşler oldukça dengeli. Kimisi atmosferi çok beğenirken, kimisi hikayenin akışını eleştirmiş. Tamamen kişisel zevkinize bağlı bir deneyim vadediyor.`;
+        aiNarrative += `İzleyici yorumları karmaşık bir tablo çiziyor — atmosferi ve görselliği sevenler ile senaryo akışını eleştirenler arasında keskin bir denge var. Tercihiniz tamamen kişisel beklentinize bağlı.`;
     }
 
     // --- 3. PSİKOLOJİK PROFİL (Psychological Profile) ---
