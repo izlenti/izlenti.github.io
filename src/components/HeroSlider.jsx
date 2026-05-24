@@ -98,14 +98,6 @@ const HeroSlider = () => {
                                     <PlayCircle className="w-5 h-5" />
                                     İncele
                                 </button>
-                                <a
-                                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent((movie.title || movie.name) + ' fragman')}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="bg-white/10 hover:bg-red-600/80 backdrop-blur-md text-white px-5 py-2.5 md:px-8 md:py-3 rounded-full font-bold flex items-center gap-2 transition-all border border-white/10 text-sm md:text-base"
-                                >
-                                    🎬 Fragman
-                                </a>
                             </div>
                         </div>
                     </div>

@@ -139,24 +139,27 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
 
                     {/* LEFT COL: Poster & Platforms */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
+                        {/* Poster — hover'da fragman overlay */}
+                        <div
+                            className={`relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group ${trailerKey ? 'cursor-pointer' : ''}`}
+                            onClick={() => trailerKey && setShowTrailer(true)}
+                        >
                             {movie.poster_path ? (
-                                <img src={`${IMAGE_BASE_URL}${movie.poster_path}`} className="w-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Poster" />
+                                <img src={`${IMAGE_BASE_URL}${movie.poster_path}`} className="w-full object-cover transition-transform duration-500 group-hover:scale-105" alt="Poster" />
                             ) : (
                                 <div className="w-full aspect-[2/3] bg-slate-800 flex items-center justify-center">
                                     <Film className="w-20 h-20 text-slate-600" />
                                 </div>
                             )}
 
-                            {/* Fragman Butonu - Her zaman görünür */}
+                            {/* Hover overlay — sadece fragman varsa */}
                             {trailerKey && (
-                                <button
-                                    onClick={() => setShowTrailer(true)}
-                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg border border-white/20 whitespace-nowrap"
-                                >
-                                    <PlayCircle className="w-5 h-5 shrink-0" />
-                                    <span>🎬 Fragmanı İzle</span>
-                                </button>
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-3">
+                                    <div className="bg-white/20 rounded-full p-4 backdrop-blur-sm">
+                                        <PlayCircle className="w-14 h-14 text-white drop-shadow-lg" />
+                                    </div>
+                                    <span className="text-white font-bold text-base tracking-wide drop-shadow-lg">🎬 Fragmanı İzle</span>
+                                </div>
                             )}
 
                             <div className={`absolute top-4 left-4 text-white text-xs font-bold px-3 py-1 rounded-md border border-white/10 shadow-lg ${type === 'tv' ? 'bg-cyan-600' : 'bg-slate-900'}`}>
@@ -463,35 +466,34 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 )}
             </div>
 
-            {/* TRAILER MODAL - Ekran ortasında, boşluksuz */}
+            {/* TRAILER MODAL — viewport'un tam ortasında açılır, scroll yoktur */}
             {showTrailer && trailerKey && (
                 <div
-                    className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300"
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.95)' }}
                     onClick={() => setShowTrailer(false)}
                 >
                     <div
-                        className="relative w-[95vw] max-w-4xl"
+                        style={{ position: 'relative', width: '95vw', maxWidth: '900px' }}
                         onClick={e => e.stopPropagation()}
                     >
-                        {/* Kapat Butonu */}
                         <button
                             onClick={() => setShowTrailer(false)}
-                            className="absolute -top-10 right-0 text-white/70 hover:text-white transition flex items-center gap-2 text-sm font-bold"
+                            style={{ position: 'absolute', top: '-40px', right: 0, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
                         >
                             <span>Kapat</span>
-                            <span className="text-xl leading-none">✕</span>
+                            <span style={{ fontSize: '20px' }}>✕</span>
                         </button>
-                        {/* 16:9 Video Container */}
-                        <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                        {/* 16:9 oranında video */}
+                        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
                             <iframe
                                 src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
-                                className="absolute inset-0 w-full h-full rounded-xl shadow-2xl"
+                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '12px' }}
                                 allow="autoplay; encrypted-media; fullscreen"
                                 allowFullScreen
                                 title="Fragman"
                             />
                         </div>
-                        <p className="text-center text-slate-500 text-xs mt-3">Kapatmak için dışarıya tıkla</p>
+                        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '10px' }}>Dışarıya tıklayarak kapat</p>
                     </div>
                 </div>
             )}
