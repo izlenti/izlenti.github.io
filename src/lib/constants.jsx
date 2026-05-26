@@ -18,6 +18,9 @@ export const MOVIE_CATEGORIES = [
     { id: 'korean', name: 'K-Cinema', icon: <Globe className="text-blue-300" />, type: 'movie', section: 'special', params: '&with_original_language=ko&vote_count.gte=300', defaultSort: 'popularity.desc' },
     { id: '90s', name: '90\'lar Nostaljisi', icon: <Calendar className="text-indigo-400" />, type: 'movie', section: 'special', params: '&primary_release_date.gte=1990-01-01&primary_release_date.lte=1999-12-31&vote_count.gte=3000', defaultSort: 'vote_average.desc' },
     { id: 'adult_animation', name: 'Yetişkin Animasyon', icon: <Skull className="text-purple-400" />, type: 'movie', section: 'special', params: '&with_genres=16&without_genres=10751&without_original_language=ja&vote_count.gte=300', defaultSort: 'popularity.desc' },
+    { id: 'oscar_winners', name: 'Oscar Ödülleri', icon: <Award className="text-yellow-500" />, type: 'movie', section: 'special', params: '&vote_count.gte=3000&vote_average.gte=7.8', defaultSort: 'vote_average.desc' },
+    { id: 'cult_classics', name: 'Kült Klasikler', icon: <Star className="text-purple-400" />, type: 'movie', section: 'special', params: '&primary_release_date.lte=1989-12-31&vote_count.gte=2000', defaultSort: 'vote_average.desc' },
+    { id: 'history_epic', name: 'Tarih & Epik', icon: <Globe className="text-orange-400" />, type: 'movie', section: 'special', params: '&with_genres=36,10752&vote_count.gte=1000', defaultSort: 'popularity.desc' },
 
     // 🎬 TÜRLERİNE GÖRE FİLMLER
     { id: 'action', name: 'Aksiyon', icon: <Zap className="text-yellow-600" />, type: 'movie', section: 'genre', params: '&with_genres=28&vote_count.gte=2000', defaultSort: 'popularity.desc' },
