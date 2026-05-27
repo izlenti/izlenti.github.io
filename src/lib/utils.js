@@ -151,11 +151,14 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
 
     let verdict, verdictIcon, verdictClass, verdictReason, prosAndCons, targetAudience, finalWord;
 
+    const genreText = genres.length > 0 ? genres.slice(0, 2).join(' ve ') : 'sinema';
+    const keywordText = keywordNames.length > 0 ? keywordNames.slice(0, 3).map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(', ') : 'katmanlı kurgu';
+
     if (wideSpectrumScore >= 8.2) {
         verdict = isTv ? "💎 Başyapıt Derecesinde Dizi" : "💎 Sinematik Başyapıt";
         verdictIcon = "💎";
         verdictClass = "from-amber-600 to-yellow-500";
-        verdictReason = "Genel tarama motorumuz; derinlemesine senaryo işçiliği, çok katmanlı karakter arkları, küresel kültürel etkisi ve üst düzey prodüksiyon kalitesiyle bu yapımı mutlak bir klasik ve başyapıt olarak sınıflandırıyor.";
+        verdictReason = `Geniş spektrumlu tarama algoritmalarımız; ${director ? `yönetmen ${director}'ın üstün sinematik dehası, ` : ''}${mainStar ? `başroldeki ${mainStar}'ın devleşen oyunculuğu ve ` : ''}${genreText} türünün sınırlarını aşan çok katmanlı senaryosu nedeniyle bu yapımı mutlak bir klasik ve başyapıt olarak sınıflandırıyor. Yapım, özellikle ${keywordText} gibi derin temalar üzerinden izleyiciye eşsiz bir entelektüel derinlik sunuyor.`;
         prosAndCons = "✅ Evrensel temaları mükemmel bir biçimde ele alan kusursuz senaryo\n✅ Efsanevi sinematografi, usta işi yönetim ve yüksek prodüksiyon değeri\n✅ Belleklerde iz bırakan, ödüllere doymayan kültürel miras\n❌ Kusursuz sanatsal vizyon dışında herhangi bir teknik veya kurgusal zaaf barındırmıyor";
         targetAudience = { title: "Nitelikli Sinema Meraklıları", desc: "Hikaye anlatımında en yüksek standartları, sanatsal derinliği ve unutulmaz anları arayan seçici izleyiciler." };
         finalWord = "Zamanın ötesinde, her sinemaseverin hayatında en az bir kez mutlaka deneyimlemesi gereken anıtsal bir yapım.";
@@ -163,7 +166,7 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         verdict = "🎯 Nitelikli & Sürükleyici Yapım";
         verdictIcon = "🎯";
         verdictClass = "from-emerald-500 to-teal-400";
-        verdictReason = "Geniş spektrumlu tarama sonucunda; türünün dinamiklerini son derece yetkin kullanan, izleyiciyi baştan sona diri tutan ve teknik açılardan takdiri hak eden son derece başarılı bir yapıt olduğu saptanmıştır.";
+        verdictReason = `Geniş spektrumlu YZ taraması; yapımın ${genreText} formüllerini son derece yetkin kullandığını, ${director ? `${director} yönetiminde ` : ''}sinematik ritmin baştan sona diri tutulduğunu doğruluyor. ${mainStar ? `Başrolde ${mainStar}'ın inandırıcı performansı eşliğinde, ` : ''}${keywordText} gibi tematik köprüler senaryodaki bazı ufak klişeleri ve öngörülebilir kurgusal dönemeçleri tamamen unutturuyor.`;
         prosAndCons = "✅ Ritmik ve akıcı kurgusu sayesinde yüksek izlenebilirlik oranı\n✅ Güçlü oyuncu kadrosu ve akılda kalıcı estetik atmosfer\n✅ Tür sınırlarını aşmayı başaran akıllıca kurgulanmış alt metinler\n❌ Bazı sinematik klişelere ve öngörülebilir senaryo dönemeçlerine yer veriyor";
         targetAudience = { title: "Kaliteli Zaman İzleyicisi", desc: "Zamanını riske atmadan, hem sürükleyici hem de entelektüel tatmin sunan başarılı yapımlar arayanlar." };
         finalWord = "Beklentilerinizi fazlasıyla karşılayacak, sinema sanatının tüm temel gereklerini yerine getiren güçlü bir yapım.";
@@ -171,7 +174,7 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         verdict = "⚖️ Ortalama / Seyirlik Yapım";
         verdictIcon = "⚖️";
         verdictClass = "from-blue-500 to-cyan-400";
-        verdictReason = "Yapay zeka taramamız, yapımın eğlenceli ve keyifli bir seyirlik sunduğunu; fakat çığır açan bir derinlik barındırmadığını ve genel izleyiciye hitap eden formüllerle örülü olduğunu gösteriyor.";
+        verdictReason = `YZ tarama algoritmamız, yapımın popüler ${genreText} şablonlarını takip eden, kafa yormayan keyifli bir seyirlik sunduğunu saptadı. ${mainStar ? `Oyunculukta ${mainStar}'ın varlığı filme dinamizm katsa da, ` : ''}senaryo ${keywordText} gibi temaları derinleştirmek yerine daha genel kitleye hitap eden formüllerle örülü kalmayı tercih ediyor; yine de zaman geçirmek için ideal.`;
         prosAndCons = "✅ Kafa yormayan, eğlence katsayısı yüksek dinamik anlatı\n✅ Sevilen oyuncuların tatmin edici kimyası ve görsel akıcılık\n❌ Derinlikten yoksun olay örgüleri ve sığ karakter analizleri\n❌ Yenilikçi olmayan, daha önce defalarca işlenmiş şablon senaryo yapısı";
         targetAudience = { title: "Rahatlama Seyircisi", desc: "Zorlu bir günün ardından kafa dağıtmak, arka planda akıp gidecek keyifli bir macera izlemek isteyenler." };
         finalWord = "Yüksek beklentiler içine girmeden, keyifli bir hafta sonu veya akşam seyri için ideal bir tercih.";
@@ -179,7 +182,7 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         verdict = "⚠️ Deneysel / Analitik Risk";
         verdictIcon = "⚠️";
         verdictClass = "from-red-500 to-rose-400";
-        verdictReason = "Geniş spektrumlu YZ taraması; tempo dalgalanmaları, kopuk olay örgüsü, zayıf karakter motivasyonları veya yetersiz prodüksiyon kalitesi nedeniyle izleyicide hayal kırıklığı riski taşıyan bir yapımı işaret ediyor.";
+        verdictReason = `Geniş spektrumlu YZ taraması; yapımın ${genreText} türündeki iddialarına rağmen ciddi tempo dalgalanmaları, kopuk olay örgüsü ve zayıf karakter motivasyonları barındırdığını saptadı. ${director ? `Yönetmen ${director}'ın kurgudaki ` : ''}ritim sorunları ve ${keywordText} gibi tematik unsurların fazlasıyla yüzeysel işlenmesi, izleyicide hayal kırıklığı yaratabilir.`;
         prosAndCons = "✅ İlgi çekici olabilecek bir çıkış noktası veya temel fikir\n❌ Ritim ve odaklanma sorunları barındıran dağınık kurgu yapısı\n❌ Karakterlerin derinleşememesi ve izleyiciyle bağ kuramaması\n❌ Tatmin etmeyen ve aceleye getirilmiş final sekansı";
         targetAudience = { title: "Türün Fanatikleri", desc: "Yapımın eksikliklerini göz ardı edip, sadece konsepte veya oyuncu kadrosuna duyduğu tutku sebebiyle şans vermek isteyenler." };
         finalWord = "Alternatif yapımlara yönelmek zaman yönetimi açısından daha rasyonel bir karar olabilir.";
@@ -189,7 +192,7 @@ export const generateDeepAnalysis = (details, credits, keywords, reviews, mediaT
         verdict = "⏳ Heyecanla Bekleniyor";
         verdictIcon = "⏳";
         verdictClass = "from-purple-500 to-fuchsia-400";
-        verdictReason = "Geniş spektrumlu ön tarama; yapımın tanıtım materyalleri, kadrosu ve tematik potansiyeliyle şimdiden izleyici kitlesi üzerinde derin bir merak ve heyecan uyandırdığını gösteriyor.";
+        verdictReason = `Geniş spektrumlu ön tarama; yapımın tanıtım materyalleri, kadrosu ve tematik potansiyeliyle şimdiden izleyici kitlesi üzerinde derin bir merak ve heyecan uyandırdığını gösteriyor. Yapım yayınlandığında ${genreText} türünün standartlarını baştan tanımlayabilir.`;
         prosAndCons = "❓ Büyük yaratıcı kadro potansiyeli\n❓ Keşfedilmeyi bekleyen kapalı kutu hikaye yapısı";
         targetAudience = { title: "Vizyon Takipçileri", desc: "Yeni çıkan işleri ve trendleri günü gününe takip eden meraklı izleyiciler." };
         finalWord = "Yayın tarihini ajandanıza ekleyerek beklemeye geçebilirsiniz.";

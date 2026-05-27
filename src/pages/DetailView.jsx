@@ -262,7 +262,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                         </div>
 
                         {/* ============================================================ */}
-                        {/* 💬 İZLENTİ AI PRO YAPAY ZEKA SÖYLEŞİSİ (CHAT INTERFACE)     */}
+                        {/* 🤖 İZLENTİ AI PRO SİNEMATİK RAPORU (FULL AI REPORT)          */}
                         {/* ============================================================ */}
                         <div className="bg-[#030712]/90 backdrop-blur-2xl border border-cyan-500/20 rounded-[2rem] p-5 md:p-6 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden ring-1 ring-white/5">
                             {/* Neon glow effects */}
@@ -276,10 +276,10 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                         <Brain className="w-5 h-5 animate-pulse" />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">🤖 İZLENTİ AI PRO YAPAY ZEKA SÖYLEŞİSİ</h4>
+                                        <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">🤖 İZLENTİ AI PRO SİNEMATİK RAPORU</h4>
                                         <p className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5 flex items-center gap-1.5">
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                            SİNEMATİK DANIŞMANLIK HATTI
+                                            AKTİF ANALİZ MOTORU ÇALIŞIYOR
                                         </p>
                                     </div>
                                 </div>
@@ -288,119 +288,103 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 </span>
                             </div>
 
-                            {/* Chat History Container */}
-                            <div className="space-y-6 relative z-10 text-left">
-                                
-                                {/* 1. User Message (Right Aligned Bubble) */}
-                                <div className="flex flex-col items-end space-y-1.5">
-                                    <span className="text-[10px] text-slate-400 font-bold mr-2 flex items-center gap-1">👤 Sinemasever</span>
-                                    <div className="bg-cyan-950/40 border border-cyan-500/30 rounded-2xl rounded-tr-none py-3 px-4 text-white text-sm max-w-[85%] shadow-lg">
-                                        "{movie.title || movie.name} ({analysis.year}) nasıl bir {analysis.term}, izlenmeye değer mi?"
-                                    </div>
-                                </div>
+                            {/* Report Container */}
+                            <div className="space-y-4 relative z-10 text-left w-full">
+                                <div className="bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-5 md:p-6 space-y-4 w-full shadow-xl">
+                                    
+                                    {/* Greeting & Info */}
+                                    <p className="text-slate-200 text-sm leading-relaxed">
+                                        Yapay zeka analiz motorumuzun <strong>"{movie.title || movie.name}" ({analysis.year})</strong> {analysis.term}i üzerinde gerçekleştirdiği geniş spektrumlu tarama sonucunda elde edilen sinematik veriler şu şekildedir:
+                                    </p>
 
-                                {/* 2. AI Assistant Response (Left Aligned Bubble) */}
-                                <div className="flex flex-col items-start space-y-1.5">
-                                    <span className="text-[10px] text-cyan-400 font-bold ml-2 flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                        🤖 İzlenti AI Pro
-                                    </span>
-                                    <div className="bg-[#0b0f19]/80 border border-white/10 rounded-2xl rounded-tl-none p-5 space-y-4 max-w-[95%] shadow-xl">
-                                        
-                                        {/* Greeting & Info */}
-                                        <p className="text-slate-200 text-sm leading-relaxed">
-                                            Bahsettiğiniz <strong>"{movie.title || movie.name}" ({analysis.year})</strong> {analysis.term}i hakkında gerçekleştirdiğim geniş spektrumlu tarama sonucunda size şu bilgileri aktarabilirim:
-                                        </p>
+                                    {/* Detailed Bullet Points mimicking the user's screenshot */}
+                                    <ul className="space-y-3.5 pl-1.5 border-l-2 border-cyan-500/20 my-4">
+                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Eleştirel Görüşler & Yorumlar:</strong>
+                                            {analysis.verdictReason}
+                                        </li>
+                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Anlatım Tarzı & Sinematik Dil:</strong>
+                                            "{movie.title || movie.name}", {movie.runtime || '?'} dakikalık süresi boyunca <strong>{analysis.psychProfile.mood}</strong> bir tonda seyrediyor. Sinirsel yapay zeka analizimize göre anlatı, özellikle <em>{analysis.psychProfile.traits.join(', ')}</em> gibi temel niteliklerle öne çıkıyor.
+                                        </li>
+                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 İzleyici Hedefi & Konumlandırma:</strong>
+                                            Bu yapım öncelikli olarak <strong>"{analysis.targetAudience?.title}"</strong> kitlesine hitap etmektedir. Yapay zeka veri havuzumuza göre, türü seven izleyiciler için oldukça sürükleyici bir deneyim vaat ediyor.
+                                        </li>
+                                    </ul>
 
-                                        {/* Detailed Bullet Points mimicking the user's screenshot */}
-                                        <ul className="space-y-3.5 pl-1.5 border-l-2 border-cyan-500/20 my-4">
-                                            <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                                <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Eleştirel Görüşler:</strong>
-                                                {analysis.verdictReason}
-                                            </li>
-                                            <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                                <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Anlatım Tarzı & Stil:</strong>
-                                                "{movie.title || movie.name}", {movie.runtime || '?'} dakikalık süresi boyunca <strong>{analysis.psychProfile.mood}</strong> bir tonda seyrediyor. Sinirsel yapay zeka analizimize göre anlatı, özellikle <em>{analysis.psychProfile.traits.join(', ')}</em> gibi temel niteliklerle öne çıkıyor.
-                                            </li>
-                                            <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                                <strong className="text-cyan-400 font-bold block mb-0.5">🔹 İzleyici Hedefi & Değerlendirme:</strong>
-                                                Bu yapım öncelikli olarak <strong>"{analysis.targetAudience?.title}"</strong> kitlesine hitap etmektedir. Yapay zeka veri havuzumuza göre, türü seven izleyiciler için oldukça sürükleyici bir deneyim vaat ediyor.
-                                            </li>
-                                        </ul>
+                                    {/* Transition Paragraph */}
+                                    <p className="text-slate-200 text-sm leading-relaxed italic bg-cyan-950/20 border border-cyan-500/10 p-3.5 rounded-xl">
+                                        <strong>Kısacası;</strong> {analysis.epicSynopsis.aiTouch}
+                                    </p>
 
-                                        {/* Transition Paragraph */}
-                                        <p className="text-slate-200 text-sm leading-relaxed italic bg-cyan-950/20 border border-cyan-500/10 p-3.5 rounded-xl">
-                                            <strong>Kısacası;</strong> {analysis.epicSynopsis.aiTouch}
-                                        </p>
-
-                                        {/* AI Cinematic Final Verdict (Özetle yerine daha güçlü başlık) */}
-                                        <div className="bg-[#040813] border border-cyan-500/30 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-3 gap-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xl">🏆</span>
-                                                    <div>
-                                                        <span className="text-cyan-400 text-[9px] font-black uppercase tracking-wider block">AI Sinematik Nihai Kararı</span>
-                                                        <span className={`inline-flex items-center gap-1 bg-gradient-to-r ${analysis.verdictClass} px-2.5 py-1 rounded text-white font-bold text-xs shadow-md mt-0.5`}>
-                                                            {analysis.verdictIcon} {analysis.verdict}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* Success Meter */}
-                                                <div className="min-w-[120px]">
-                                                    <div className="flex justify-between items-center mb-0.5">
-                                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Başarı Endeksi</span>
-                                                        <span className="text-xs font-black text-cyan-300">{analysis.matchRate}%</span>
-                                                    </div>
-                                                    <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden p-[0.5px]">
-                                                        <div
-                                                            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-1000"
-                                                            style={{ width: `${analysis.matchRate}%` }}
-                                                        />
-                                                    </div>
+                                    {/* AI Cinematic Final Verdict (Özetle yerine daha güçlü başlık) */}
+                                    <div className="bg-[#040813] border border-cyan-500/30 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-3 gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">🏆</span>
+                                                <div>
+                                                    <span className="text-cyan-400 text-[9px] font-black uppercase tracking-wider block">AI Sinematik Nihai Kararı</span>
+                                                    <span className={`inline-flex items-center gap-1 bg-gradient-to-r ${analysis.verdictClass} px-2.5 py-1 rounded text-white font-bold text-xs shadow-md mt-0.5`}>
+                                                        {analysis.verdictIcon} {analysis.verdict}
+                                                    </span>
                                                 </div>
                                             </div>
-
-                                            {/* Pros & Cons List */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                                                <div className="space-y-1.5">
-                                                    <span className="text-emerald-400 font-bold text-[9px] uppercase tracking-wider block">✓ İZLEME SEBEPLERİ:</span>
-                                                    <ul className="space-y-1">
-                                                        {analysis.whyWatch?.slice(0, 3).map((item, idx) => (
-                                                            <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
-                                                                <span className="text-emerald-500 text-sm mt-[-2px]">✓</span>
-                                                                <span>{item}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                            
+                                            {/* Success Meter */}
+                                            <div className="min-w-[120px]">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Başarı Endeksi</span>
+                                                    <span className="text-xs font-black text-cyan-300">{analysis.matchRate}%</span>
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <span className="text-rose-400 font-bold text-[9px] uppercase tracking-wider block">✕ KAÇINMA SEBEPLERİ:</span>
-                                                    <ul className="space-y-1">
-                                                        {analysis.whySkip?.slice(0, 3).map((item, idx) => (
-                                                            <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
-                                                                <span className="text-rose-500 text-sm mt-[-2px]">✕</span>
-                                                                <span>{item}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden p-[0.5px]">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-1000"
+                                                        style={{ width: `${analysis.matchRate}%` }}
+                                                    />
                                                 </div>
-                                            </div>
-
-                                            {/* Final Verdict Word */}
-                                            <div className="border-t border-white/5 pt-3 mt-3 flex items-start gap-2.5">
-                                                <span className="text-xl text-cyan-400">💡</span>
-                                                <p className="text-cyan-200 text-xs font-semibold leading-relaxed italic">
-                                                    "{analysis.finalWord}"
-                                                </p>
                                             </div>
                                         </div>
 
-                                        {/* Ending Interactive Question */}
-                                        <p className="text-slate-300 text-xs leading-relaxed pt-2 border-t border-white/5">
-                                            Bu yapımı belirli bir oyuncu veya yönetmen kadrosu nedeniyle mi merak ediyorsunuz, yoksa size <strong>{movie.genres?.slice(0, 2).map(g => g.name).join(' veya ')}</strong> türünde daha nokta atışı başka bir yapay zeka önerisi mi sunayım?
-                                        </p>
+                                        {/* Pros & Cons List */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                                            <div className="space-y-1.5">
+                                                <span className="text-emerald-400 font-bold text-[9px] uppercase tracking-wider block">✓ İZLEME SEBEPLERİ:</span>
+                                                <ul className="space-y-1">
+                                                    {analysis.whyWatch?.slice(0, 3).map((item, idx) => (
+                                                        <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
+                                                            <span className="text-emerald-500 text-sm mt-[-2px]">✓</span>
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <span className="text-rose-400 font-bold text-[9px] uppercase tracking-wider block">✕ KAÇINMA SEBEPLERİ:</span>
+                                                <ul className="space-y-1">
+                                                    {analysis.whySkip?.slice(0, 3).map((item, idx) => (
+                                                        <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
+                                                            <span className="text-rose-500 text-sm mt-[-2px]">✕</span>
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        {/* Final Verdict Word */}
+                                        <div className="border-t border-white/5 pt-3 mt-3 flex items-start gap-2.5">
+                                            <span className="text-xl text-cyan-400">💡</span>
+                                            <p className="text-cyan-200 text-xs font-semibold leading-relaxed italic">
+                                                "{analysis.finalWord}"
+                                            </p>
+                                        </div>
                                     </div>
+
+                                    {/* Ending Interactive Question */}
+                                    <p className="text-slate-300 text-xs leading-relaxed pt-2 border-t border-white/5">
+                                        Bu yapımı belirli bir oyuncu veya yönetmen kadrosu nedeniyle mi merak ediyorsunuz, yoksa size <strong>{movie.genres?.slice(0, 2).map(g => g.name).join(' veya ')}</strong> türünde daha nokta atışı başka bir yapay zeka önerisi mi sunayım?
+                                    </p>
                                 </div>
                             </div>
                         </div>
