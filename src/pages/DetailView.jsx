@@ -7,13 +7,14 @@ import {
 } from 'lucide-react';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL, BACKDROP_BASE_URL, LOGO_BASE_URL } from '../lib/constants.jsx';
 import { generateDeepAnalysis, translateText, getExternalLinks, getAIBadge, getReleaseStatus, formatTurkishDate } from '../lib/utils';
-import { fetchGeminiReview, getGeminiVerdictStyle, getWatchRecStyle } from '../lib/gemini';
+import { fetchGeminiReview, getGeminiVerdictStyle, getWatchRecStyle, getGeminiApiKey, setGeminiApiKey } from '../lib/gemini';
 
 const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
     const { type, id } = useParams();
     const navigate = useNavigate();
 
     const [movie, setMovie] = useState(null);
+    const [credits, setCredits] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [analysis, setAnalysis] = useState(null);
@@ -24,6 +25,10 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
     const [trailerKey, setTrailerKey] = useState(null);
     const [showTrailer, setShowTrailer] = useState(false);
     const [expandedReviews, setExpandedReviews] = useState({});
+
+    // API Key states
+    const [apiKey, setApiKeyState] = useState(getGeminiApiKey());
+    const [inputApiKey, setInputApiKey] = useState('');
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -88,17 +93,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 setAnalysis(analysisObj);
 
                 setMovie({ ...details, media_type: type, external_ids: externalIds });
-
-                // Gemini AI Gerçek Zamanlı Yorum (asenkron, sayfa yüklenirken başlar)
-                setGeminiLoading(true);
-                fetchGeminiReview(details, credits, type)
-                    .then(result => {
-                        if (result.success) {
-                            setGeminiReview(result.data);
-                        }
-                    })
-                    .catch(err => console.error('[Gemini]', err))
-                    .finally(() => setGeminiLoading(false));
+                setCredits(credits);
 
             } catch (err) {
                 console.error(err);
@@ -111,6 +106,29 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
         fetchDetails();
         window.scrollTo(0, 0);
     }, [id, type]);
+
+    // Gemini AI'ı API anahtarı, film ve ekip verileri değiştikçe tetikleyen reaktif useEffect
+    useEffect(() => {
+        if (!movie || !credits || !apiKey) {
+            setGeminiReview(null);
+            return;
+        }
+
+        setGeminiLoading(true);
+        fetchGeminiReview(movie, credits, type)
+            .then(result => {
+                if (result.success) {
+                    setGeminiReview(result.data);
+                } else {
+                    setGeminiReview(null);
+                }
+            })
+            .catch(err => {
+                console.error('[Gemini]', err);
+                setGeminiReview(null);
+            })
+            .finally(() => setGeminiLoading(false));
+    }, [movie, credits, apiKey, type]);
 
     if (loading) {
         return (
@@ -283,27 +301,95 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                             <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
                             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-                            {/* Header */}
-                            <div className="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-gradient-to-tr from-cyan-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg shadow-cyan-500/20">
-                                        <Sparkles className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">İZLENTİ AI YAPAY ZEKA ANALİZİ</h4>
-                                        <p className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5 flex items-center gap-1.5">
-                                            <span className={`w-1.5 h-1.5 rounded-full ${geminiLoading ? 'bg-amber-500 animate-ping' : geminiReview ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
-                                            {geminiLoading ? 'GEMİNİ ANALİZ EDİYOR...' : geminiReview ? 'GEMİNİ ANALİZİ TAMAMLANDI' : 'FALLBACK MODU'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    {geminiReview ? 'Gemini AI' : 'Lokal'}
-                                </span>
-                            </div>
+                             {/* Header */}
+                             <div className="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
+                                 <div className="flex items-center gap-3">
+                                     <div className="bg-gradient-to-tr from-cyan-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg shadow-cyan-500/20">
+                                         <Sparkles className="w-5 h-5" />
+                                     </div>
+                                     <div>
+                                         <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">İZLENTİ AI YAPAY ZEKA ELEŞTİRİSİ</h4>
+                                         <p className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5 flex items-center gap-1.5">
+                                             <span className={`w-1.5 h-1.5 rounded-full ${geminiLoading ? 'bg-amber-500 animate-ping' : geminiReview ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
+                                             {!apiKey ? 'API ANAHTARI BEKLENİYOR' : geminiLoading ? 'GEMİNİ ELEŞTİRİ YAZIYOR...' : geminiReview ? 'GEMİNİ ELEŞTİRİSİ HAZIR' : 'FALLBACK ELEŞTİRİSİ'}
+                                         </p>
+                                     </div>
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                     <span className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                         {geminiReview ? 'Gemini AI Eleştirisi' : 'Lokal İnceleme'}
+                                     </span>
+                                     {apiKey && (
+                                         <button 
+                                             onClick={() => {
+                                                 if (window.confirm("API anahtarını temizlemek ve lokal analiz moduna geçmek istiyor musunuz?")) {
+                                                     setGeminiApiKey('');
+                                                     setApiKeyState('');
+                                                     setInputApiKey('');
+                                                 }
+                                             }}
+                                             title="API Anahtarını Kaldır" 
+                                             className="text-slate-500 hover:text-red-400 p-1 transition rounded-lg hover:bg-white/5 active:scale-95"
+                                         >
+                                             <XCircle className="w-4 h-4" />
+                                         </button>
+                                     )}
+                                 </div>
+                             </div>
 
-                            {/* CONTENT: Gemini Loading / Gemini Review / Fallback */}
-                            <div className="relative z-10">
+                             {/* CONTENT: Gemini Loading / Gemini Review / Fallback */}
+                             <div className="relative z-10">
+
+                                 {/* --- GEMİNİ API KEY TANIMLAMA EKRANI --- */}
+                                 {!apiKey && (
+                                     <div className="bg-[#0b0f19]/80 border border-cyan-500/20 rounded-2xl p-5 md:p-6 space-y-4 text-center">
+                                         <div className="mx-auto w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                                             <Brain className="w-6 h-6 animate-pulse" />
+                                         </div>
+                                         <div className="space-y-1">
+                                             <h5 className="text-white font-bold text-sm md:text-base">Gemini Yapay Zeka Yorumlarını Aktif Et</h5>
+                                             <p className="text-slate-400 text-xs md:text-sm max-w-md mx-auto leading-relaxed">
+                                                 İzlenti AI, filmleri analiz edip size tamamen dürüst, dürüst ve keskin Letterboxd tarzı yapay zeka yorumları sunabilir.
+                                             </p>
+                                         </div>
+                                         
+                                         <div className="max-w-md mx-auto space-y-3 pt-2">
+                                             <div className="relative">
+                                                 <input 
+                                                     type="password" 
+                                                     placeholder="Google Gemini API Anahtarınızı Yapıştırın (AIzaSy...)" 
+                                                     value={inputApiKey}
+                                                     onChange={(e) => setInputApiKey(e.target.value)}
+                                                     className="w-full bg-[#030712]/90 border border-white/10 rounded-xl px-4 py-2.5 text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+                                                 />
+                                             </div>
+                                             <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                                                 <button 
+                                                     onClick={() => {
+                                                         if (inputApiKey.trim()) {
+                                                             setGeminiApiKey(inputApiKey);
+                                                             setApiKeyState(inputApiKey.trim());
+                                                         }
+                                                     }}
+                                                     className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg transition active:scale-95"
+                                                 >
+                                                     Kaydet ve Analiz Et 🚀
+                                                 </button>
+                                                 <a 
+                                                     href="https://aistudio.google.com/" 
+                                                     target="_blank" 
+                                                     rel="noopener noreferrer" 
+                                                     className="text-[10px] md:text-xs text-cyan-400 hover:text-cyan-300 transition underline flex items-center gap-1"
+                                                 >
+                                                     Ücretsiz API Key Al <ExternalLink className="w-3 h-3" />
+                                                 </a>
+                                             </div>
+                                             <p className="text-[10px] text-slate-500 leading-normal">
+                                                 *Anahtarınız tamamen kendi tarayıcınızda saklanır. Sunucularımıza veya GitHub'a asla gönderilmez, 100% güvenlidir.
+                                             </p>
+                                         </div>
+                                     </div>
+                                 )}
 
                                 {/* --- GEMİNİ YÜKLEME ANİMASYONU --- */}
                                 {geminiLoading && !geminiReview && (
@@ -445,7 +531,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 )}
 
                                 {/* --- FALLBACK: Gemini yoksa eski deterministik analiz --- */}
-                                {!geminiLoading && !geminiReview && (
+                                {apiKey && !geminiLoading && !geminiReview && (
                                     <div className="space-y-4">
                                         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center gap-2.5 text-xs">
                                             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />

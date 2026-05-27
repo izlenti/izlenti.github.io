@@ -2,7 +2,17 @@
 // Gemini API'den keskin, net ve dürüst yapay zeka yorumları alır.
 // Cache mekanizması ile aynı film için tekrar API çağrısı yapmaz.
 
-const GEMINI_API_KEY = 'AIzaSyCRpKU2BRe8iNeVmCVKQJkjKNpgRlJQExI';
+export const getGeminiApiKey = () => {
+    return localStorage.getItem('izlenti_gemini_api_key') || '';
+};
+
+export const setGeminiApiKey = (key) => {
+    if (key) {
+        localStorage.setItem('izlenti_gemini_api_key', key.trim());
+    } else {
+        localStorage.removeItem('izlenti_gemini_api_key');
+    }
+};
 
 // --- CACHE SİSTEMİ (localStorage, 30 gün) ---
 const CACHE_PREFIX = 'izlenti_gemini_';
@@ -87,7 +97,8 @@ const MODELS = [
 
 const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
     const model = MODELS[modelIndex] || MODELS[0];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+    const key = getGeminiApiKey();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -147,7 +158,8 @@ export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
     }
 
     // 2. API Key kontrol
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'BURAYA_API_KEY_GELECEK') {
+    const key = getGeminiApiKey();
+    if (!key) {
         console.warn('[İzlenti AI] Gemini API key tanımlı değil, fallback kullanılacak.');
         return { success: false, error: 'API key yok' };
     }
