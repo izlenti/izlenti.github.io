@@ -1,6 +1,6 @@
-// --- YEREL AKILLI SİNEMA ELEŞTİRMENİ MOTORU (LOCAL AI CRITIC ENGINE) ---
+// --- YEREL AKILLI SİNEMA/DİZİ ELEŞTİRMENİ MOTORU (LOCAL AI CRITIC ENGINE) ---
 // Gemini API key sıkıntılarını tamamen ortadan kaldıran, 0 saniyede yüklenen,
-// film detaylarına (yönetmen, oyuncular, puan, tür) göre son derece keskin, 
+// film veya dizi detaylarına (yönetmen, oyuncular, puan, tür, sezon) göre son derece keskin, 
 // profesyonel ve gerçekçi Letterboxd tarzı Türkçe eleştiriler üreten yerel motor.
 
 const generateLocalReview = (movieDetails, credits, mediaType) => {
@@ -8,12 +8,38 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
     const year = (movieDetails.release_date || movieDetails.first_air_date || '').substring(0, 4) || 'Bilinmeyen Yıl';
     const genres = movieDetails.genres?.map(g => g.name) || [];
     const genreStr = genres.join(', ') || 'Sinema';
-    const director = credits?.crew?.find(c => c.job === 'Director')?.name || '';
+    const director = credits?.crew?.find(c => c.job === 'Director')?.name || movieDetails.created_by?.[0]?.name || '';
     const cast = credits?.cast?.slice(0, 3).map(c => c.name) || [];
     const tmdbScore = movieDetails.vote_average || 7.0;
 
-    // Deterministik ama gerçekçi bir AI Puanı simüle et (TMDB puanına yakın ama keskin)
-    // Film ID'sini seed olarak kullanarak her film için puan sabit kalsın
+    // --- DİZİ / FİLM DİL UYUMLULUĞU İÇİN DİNAMİK DEĞİŞKENLER ---
+    const isTv = mediaType === 'tv';
+    const type = isTv ? 'dizi' : 'film';
+    const typeCap = isTv ? 'Dizi' : 'Film';
+    
+    // Dilbilgisi ekleri ve tanımlamalar
+    const typeGenitive = isTv ? 'dizinin' : 'filmin';
+    const typeDative = isTv ? 'diziye' : 'filme';
+    const typeLocative = isTv ? 'dizide' : 'filmde';
+    const typeAccusative = isTv ? 'diziyi' : 'filmi';
+    const typePlural = isTv ? 'dizilerinden' : 'filmlerinden';
+    
+    const creatorLabel = isTv ? 'yaratıcı kadro' : 'yönetmen';
+    const creatorDirLabel = isTv ? 'yaratıcı kadrosu' : 'yönetmen koltuğundaki isim';
+    const screenLabel = isTv ? 'ekrana' : 'beyazperdeye';
+    const viewerLabel = isTv ? 'diziseverlerin' : 'sinemaseverlerin';
+    const watchEveningLabel = isTv ? 'keyifli bir dizi maratonu' : 'kaliteli bir sinema akşamı';
+    const cultureLabel = isTv ? 'televizyon' : 'sinema';
+    const theaterLabel = isTv ? 'ekranları' : 'sinema salonlarını';
+    const classicLabel = isTv ? 'kült televizyon klasiği' : 'sinema klasiği';
+    
+    // Süre bilgisini dinamikleştirme (Diziler için sezon/bölüm, Filmler için dakika)
+    const runtime = movieDetails.runtime || (movieDetails.episode_run_time?.[0]) || 0;
+    const runtimeText = isTv 
+        ? `${movieDetails.number_of_seasons ? movieDetails.number_of_seasons + ' sezonluk' : 'bölümlerinin'} sürükleyici serüvenini` 
+        : (runtime > 0 ? `${runtime} dakikalık süresini` : 'iki saate yakın süresini');
+
+    // Film ID'sini seed olarak kullanarak her yapım için puan sabit kalsın
     const idSeed = movieDetails.id ? (movieDetails.id % 10) / 10 : 0.5;
     let score = Math.round((tmdbScore + (idSeed * 0.8 - 0.4)) * 10) / 10;
     if (score > 10) score = 10;
@@ -29,33 +55,33 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
     let finalVerdict = '';
 
     const castText = cast.length > 0 ? cast.join(', ') : 'başrol oyuncuları';
-    const dirText = director ? `${director}` : 'yönetmen koltuğundaki isim';
+    const dirText = director ? `${director}` : creatorDirLabel;
 
     if (score >= 8.5) {
         verdict = 'Başyapıt';
         watchRecommendation = 'MUTLAKA İZLE';
-        summary = `"${title} (${year})", modern sinemanın zirve noktalarından biri. ${dirText} filmin her karesinde sinematik dehasını konuştururken, kusursuz senaryosu ve oyunculuklarıyla izleyiciyi hipnotize ediyor.`;
+        summary = `"${title} (${year})", modern ${cultureLabel} dünyasının zirve noktalarından biri. ${dirText} ${typeGenitive} her karesinde ${isTv ? 'anlatı' : 'sinematik'} dehasını konuştururken, kusursuz senaryosu ve oyunculuklarıyla izleyiciyi hipnotize ediyor.`;
         strengths = [
-            `${dirText} imzalı büyüleyici sinematik vizyon ve estetik yönetmenlik`,
+            `${dirText} imzalı büyüleyici görsel vizyon ve estetik anlatım dili`,
             `${castText} kadrosunun adeta devleştiği, ödüllük oyunculuk performansları`,
             "En ufak bir sarkma barındırmayan, derin felsefi alt metne sahip kusursuz senaryo"
         ];
         weaknesses = [
             "Görsel ve duygusal yoğunluğunun yüksek olması nedeniyle bazı izleyiciler için sindirmesi zaman alabilir",
-            "Film sonrasındaki yapımların çıtasını çok yükseğe koyarak sinema zevkini bozma tehlikesi"
+            `Bu ${type} sonrasındaki yapımların çıtasını çok yükseğe koyarak seyir zevkini bozma tehlikesi`
         ];
         reviewParagraphs = [
-            `"${title} (${year})", sadece ${genreStr} türünün sınırlarını yeniden çizmekle kalmıyor, modern sinema tarihinin en olgun ve büyüleyici örneklerinden biri olarak hafızalara kazınıyor. ${dirText}, kamerayı adeta bir fırça gibi kullanarak her sahnede estetik ve anlatı dengesini muazzam bir vizyonla kurmuş. Filmin görsel dili, izleyiciyi ilk dakikadan itibaren kendi dünyasının içine çeken hipnotik bir güce sahip.`,
-            `Oyuncu kadrosunda ${castText} gibi isimlerin yer alması yapımın en büyük şansı. Özellikle başroller arasındaki organik ekran kimyası ve karakterlerin içsel çatışmalarını yansıtmadaki olağanüstü beceri, filmin dramatik gücünü zirveye taşıyor. Teknik işçilik, ışık kullanımı ve müzik tasarımları adeta sinematik bir senfoni gibi birbirini tamamlıyor ve kusursuz bir kompozisyon oluşturuyor.`,
-            `Senaryo, en ufak bir sarkma veya gereksiz diyalog barındırmayan, adeta bir saat gibi tıkır tıkır işleyen harika bir yapıya sahip. Hikaye, sadece yüzeysel bir olay örgüsü sunmakla kalmıyor; insan psikolojisine, toplumsal dinamiklere ve varoluşsal sancılara dair derinlikli entelektüel gözlemler barındırıyor. Son saniyesine kadar temposunu ve felsefi ağırlığını kaybetmeyen bu yapım, kesinlikle zamanın ötesinde bir klasik.`
+            `"${title} (${year})", sadece ${genreStr} türünün sınırlarını yeniden çizmekle kalmıyor, modern ${cultureLabel} tarihinin en olgun ve büyüleyici örneklerinden biri olarak hafızalara kazınıyor. ${director ? `Yönetmen ${director}` : creatorDirLabel}, kamerayı adeta bir fırça gibi kullanarak her sahnede estetik ve anlatı dengesini muazzam bir vizyonla kurmuş. ${typeCapCap(typeGenitive)} görsel dili, izleyiciyi ilk dakikadan itibaren kendi dünyasının içine çeken hipnotik bir güce sahip.`,
+            `Oyuncu kadrosunda ${castText} gibi isimlerin yer alması yapımın en büyük şansı. Özellikle başroller arasındaki organik ekran kimyası ve karakterlerin içsel çatışmalarını yansıtmadaki olağanüstü beceri, ${typeGenitive} dramatik gücünü zirveye taşıyor. Teknik işçilik, ışık kullanımı ve müzik tasarımları adeta bütünsel bir senfoni gibi birbirini tamamlıyor ve kusursuz bir kompozisyon oluşturuyor.`,
+            `Senaryo, en ufak bir sarkma veya gereksiz diyalog barındırmayan, adeta bir saat gibi tıkır tıkır işleyen harika bir yapıya sahip. Hikaye, sadece yüzeysel bir olay örgüsü sunmakla kalmıyor; insan psikolojisine, toplumsal dinamiklere ve varoluşsal sancılara dair derinlikli entelektüel gözlemler barındırıyor. Son saniyesine kadar temposunu ve felsefi ağırlığını kaybetmeyen bu yapım, kesinlikle ${classicLabel} olmayı hak ediyor.`
         ];
-        targetAudience = "Sinemanın sadece bir eğlence değil, yüksek bir sanat dalı olduğunu düşünen ve derin anlatılardan keyif alan tüm gerçek sinefiller.";
-        finalVerdict = "Yıllar geçse de değerinden hiçbir şey kaybetmeyecek, sinema salonlarını kutsayan görkemli bir başyapıt.";
+        targetAudience = `Seyir zevkinin sadece bir eğlence değil, yüksek bir sanat dalı olduğunu düşünen ve derin anlatılardan keyif alan tüm gerçek ${viewerLabel}.`;
+        finalVerdict = `Yıllar geçse de değerinden hiçbir şey kaybetmeyecek, ${theaterLabel} kutsayan görkemli bir başyapıt.`;
 
     } else if (score >= 7.6) {
         verdict = 'Çok İyi';
         watchRecommendation = 'İZLE';
-        summary = `"${title}", güçlü dramatik yapısı, akıcı anlatımı ve ${castText} kadrosunun parıldayan performanslarıyla yılın en dikkat çekici ${mediaType === 'tv' ? 'dizilerinden' : 'filmlerinden'} biri.`;
+        summary = `"${title}", güçlü dramatik yapısı, akıcı anlatımı ve ${castText} kadrosunun parıldayan performanslarıyla yılın en dikkat çekici ${typePlural} biri.`;
         strengths = [
             "Karakterlerin derinlikli işlenişi ve izleyiciyle kurulan güçlü empati",
             "Sürükleyici tempo ve merak unsurunun son ana kadar taze tutulması",
@@ -66,12 +92,12 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
             "Yan karakterlerin bazılarının ana hikaye kadar derinleştirilmemiş olması"
         ];
         reviewParagraphs = [
-            `"${title} (${year})", son dönemde karşımıza çıkan en nitelikli ve eli yüzü düzgün ${genreStr} örneklerinden biri. ${dirText}, hikayeyi anlatırken ucuz numaralara kaçmadan, son derece olgun ve dengeli bir sinema dili tercih etmiş. Filmin yarattığı atmosfer o kadar güçlü ki, hikaye ilerledikçe kendinizi karakterlerin dünyasında kaybolmuş buluyorsunuz.`,
-            `Performans tarafında ${castText} izleyiciye adeta bir oyunculuk resitali sunuyor. Karakterlerin duygusal geçişleri, jestleri ve mimikleri o kadar samimi ve dozunda ki, yapaylıktan tamamen uzak bir deneyim elde ediliyor. Sanat yönetimi ve teknik detaylar, anlatıyı destekleyecek şekilde büyük bir özenle tasarlanmış ve bu durum filmin kalitesini bir üst seviyeye taşımış.`,
-            `Hikaye örgüsü ve senaryo, izleyiciyi sürekli tetikte tutan zekice hamlelerle dolu. Bazı ufak tefek mantık hataları veya yan karakterlerin gelişimindeki eksiklikler göze çarpsa da, genel toplamda sunduğu sinematik tatmin bu pürüzleri tamamen gölgede bırakıyor. Kesinlikle şans verilmesi gereken, vizyoner ve son derece başarılı bir iş.`
+            `"${title} (${year})", son dönemde karşımıza çıkan en nitelikli ve eli yüzü düzgün ${genreStr} örneklerinden biri. ${director ? `Yönetmen ${director}` : creatorDirLabel}, hikayeyi anlatırken ucuz numaralara kaçmadan, son derece olgun ve dengeli bir anlatım dili tercih etmiş. ${typeCapCap(typeGenitive)} yarattığı atmosfer o kadar güçlü ki, hikaye ilerledikçe kendinizi karakterlerin dünyasında kaybolmuş buluyorsunuz.`,
+            `Performans tarafında ${castText} izleyiciye adeta bir oyunculuk resitali sunuyor. Karakterlerin duygusal geçişleri, jestleri ve mimikleri o kadar samimi ve dozunda ki, yapaylıktan tamamen uzak bir deneyim elde ediliyor. Sanat yönetimi ve teknik detaylar, anlatıyı destekleyecek şekilde büyük bir özenle tasarlanmış ve bu durum ${typeGenitive} kalitesini bir üst seviyeye taşımış.`,
+            `Hikaye örgüsü ve senaryo, izleyiciyi sürekli tetikte tutan zekice hamlelerle dolu. Bazı ufak tefek mantık hataları veya yan karakterlerin gelişimindeki eksiklikler göze çarpsa da, genel toplamda sunduğu seyirsel tatmin bu pürüzleri tamamen gölgede bırakıyor. Kesinlikle şans verilmesi gereken, vizyoner ve son derece başarılı bir iş.`
         ];
-        targetAudience = "Kaliteli oyunculuk, güçlü hikaye anlatımı ve etkileyici sinematografi arayan seçici izleyiciler.";
-        finalVerdict = "Karakter odaklı anlatısı ve etkileyici atmosferiyle sinemasal hafızanızda kalıcı bir yer edinecek.";
+        targetAudience = "Kaliteli oyunculuk, güçlü hikaye anlatımı ve etkileyici görsel atmosfer arayan seçici izleyiciler.";
+        finalVerdict = "Karakter odaklı anlatısı ve etkileyici atmosferiyle zihninizde kalıcı bir yer edinecek.";
 
     } else if (score >= 6.8) {
         verdict = 'İyi';
@@ -87,12 +113,12 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
             "Akılda kalıcı, çığır açıcı özgün sahnelerin eksikliği"
         ];
         reviewParagraphs = [
-            `"${title}", izleyiciye vaat ettiği şeyi dürüstçe sunan, ayakları yere basan başarılı bir ${genreStr} denemesi. ${dirText}, sinema tarihini yeniden yazma iddiasında bulunmadan, elindeki malzemeyi en temiz ve izlenebilir şekilde işlemeyi başarmış. Bu mütevazı ama kararlı tutum, filmin en büyük artılarından biri haline geliyor.`,
-            `Oyuncu kadrosunda ${castText} ellerinden gelenin en iyisini yaparak karakterlerine can vermişler. Büyük iddiaları olmasa da aralarındaki uyum izleyiciye geçiyor. Teknik açıdan da kamera tercihleri ve kurgu son derece dinamik; bu da filmin iki saate yakın süresini hiç hissettirmeden akıp gitmesini sağlıyor.`,
-            "Senaryo zaman zaman janranın bilindik yollarına sapıp sürpriz etkisini azaltsa da, diyalogların doğallığı ve sahnelerin akıcılığı sayesinde kendisini keyifle izlettiriyor. Büyük felsefi derinlikler aramayan, ancak kaliteli ve sürükleyici bir sinema akşamı geçirmek isteyenler için son derece ideal bir seçenek."
+            `"${title}", izleyiciye vaat ettiği şeyi dürüstçe sunan, ayakları yere basan başarılı bir ${genreStr} denemesi. ${director ? `Yönetmen ${director}` : creatorDirLabel}, sinematik sınırları zorlama iddiasında bulunmadan, elindeki malzemeyi en temiz ve izlenebilir şekilde işlemeyi başarmış. Bu mütevazı ama kararlı tutum, ${typeGenitive} en büyük artılarından biri haline geliyor.`,
+            `Oyuncu kadrosunda ${castText} ellerinden gelenin en iyisini yaparak karakterlerine can vermişler. Büyük iddiaları olmasa da aralarındaki uyum izleyiciye geçiyor. Teknik açıdan da kamera tercihleri ve kurgu son derece dinamik; bu da ${typeGenitive} ${runtimeText} hiç hissettirmeden akıp gitmesini sağlıyor.`,
+            `Senaryo zaman zaman janranın bilindik yollarına sapıp sürpriz etkisini azaltsa da, diyalogların doğallığı ve sahnelerin akıcılığı sayesinde kendisini keyifle izlettiriyor. Büyük felsefi derinlikler aramayan, ancak ${watchEveningLabel} geçirmek isteyenler için son derece ideal bir seçenek.`
         ];
-        targetAudience = "Hafta sonu keyifle izlenebilecek, akıcı, yormayan ve kaliteli bir seyirlik arayanlar.";
-        finalVerdict = "Devrim yaratmıyor belki ama türün meraklılarını sonuna kadar tatmin edecek dürüst ve temiz bir sinema deneyimi.";
+        targetAudience = `Hafta sonu keyifle izlenebilecek, akıcı, yormayan ve kaliteli bir ${type} arayanlar.`;
+        finalVerdict = `Devrim yaratmıyor belki ama türün meraklılarını sonuna kadar tatmin edecek dürüst ve temiz bir ${type} deneyimi.`;
 
     } else if (score >= 5.8) {
         verdict = 'Ortalama';
@@ -100,18 +126,18 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
         summary = `Potansiyeli yüksek olmasına rağmen bazı senaryo zayıflıkları ve tempo sorunları nedeniyle hedefini tam on ikiden vuramayan, ortalama bir seyirlik.`;
         strengths = [
             "İlgi çekici başlangıç fikri ve merak uyandıran çıkış noktası",
-            "Görsel efektler ve bazı sahnelerdeki estetik başarı"
+            "Görsel atmosfer ve bazı sahnelerdeki estetik başarı"
         ];
         weaknesses = [
             "Orta bölümdeki ciddi tempo kayıpları ve sarkmalar",
             "Derinleştirilememiş yüzeysel karakter motivasyonları"
         ];
         reviewParagraphs = [
-            `"${title}", masaya koyduğu ilginç fikirlerle heyecan yaratan ancak işleniş aşamasında havada kalan bir ${genreStr} denemesi. ${dirText} hikayeyi kurarken heyecan verici bir zemin hazırlasa da, filmin ortalarına doğru odağını kaybediyor ve ne tarafa gideceğini bilemeyen kararsız bir anlatıya dönüşüyor.`,
+            `"${title}", masaya koyduğu ilginç fikirlerle heyecan yaratan ancak işleniş aşamasında havada kalan bir ${genreStr} denemesi. ${director ? `Yönetmen ${director}` : creatorDirLabel} hikayeyi kurarken heyecan verici bir zemin hazırlasa da, yapımın ortalarına doğru odağını kaybediyor ve ne tarafa gideceğini bilemeyen kararsız bir anlatıya dönüşüyor.`,
             `Oyuncu kadrosunda ${castText} ellerinden gelen çabayı gösterseler de, senaryonun karakterlere sunduğu alan çok dar olduğu için derinleşmekte zorlanıyorlar. Teknik olarak görsellik ve prodüksiyon kalitesi sınıfı geçse de, bu durum senaryodaki yapısal boşlukları kapatmaya yetmiyor.`,
-            "Sonuç olarak karşımızda ne çok kötü diyebileceğimiz ne de övebileceğimiz, tam anlamıyla 'gri bölgede' yer alan bir yapım var. İlginç temasına rağmen akılda kalıcı bir finale ulaşamayan, beklentileri çok yüksek tutmadan boş vakitte çıtır çerez niyetine izlenebilecek tipik bir ortalama iş."
+            `Sonuç olarak karşımızda ne çok kötü diyebileceğimiz ne de övebileceğimiz, tam anlamıyla 'gri bölgede' yer alan bir yapım var. İlginç temasına rağmen akılda kalıcı bir finale ulaşamayan, beklentileri çok yüksek tutmadan boş vakitte çıtır çerez niyetine izlenebilecek tipik bir ortalama ${type}.`
         ];
-        targetAudience = "Büyük beklentileri olmayan, sadece boş zaman değerlendirmek için çerezlik film arayan izleyiciler.";
+        targetAudience = `Büyük beklentileri olmayan, sadece boş zaman değerlendirmek için çerezlik ${type} arayan izleyiciler.`;
         finalVerdict = "Harika bir fikrin vasat bir senaryo işçiliğiyle harcandığı kaçırılmış bir fırsat.";
 
     } else if (score >= 4.5) {
@@ -120,16 +146,16 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
         summary = `Kendi türünün ucuz taklitlerinden öteye geçemeyen, özgünlükten tamamen uzak ve klişelerle boğulmuş vasat bir deneme.`;
         strengths = [
             "Görece başarılı birkaç müzik tercihi",
-            "Filmin süresinin makul seviyede tutulmuş olması"
+            `Yapımın süresinin makul seviyede tutulmuş olması`
         ];
         weaknesses = [
             "Tepeden tırnağa klişe dolu, tahmin edilebilir yavan anlatım",
             "Oyuncuların isteksizliği ve yapay duran karakter etkileşimleri"
         ];
         reviewParagraphs = [
-            `"${title}", maalesef özgün bir fikri olmayan ve tamamen daha önce yapılmış başarılı ${genreStr} filmlerinin formüllerini kopyalamaya çalışan bir yapım. ${dirText}, türe yeni hiçbir şey katmadığı gibi, mevcut formülleri de oldukça ruhsuz ve mekanik bir şekilde ekrana taşımış. Film ilerledikçe kendinizi sürekli 'ben bunu daha önce görmüştüm' derken buluyorsunuz.`,
-            `${castText} gibi isimlerin varlığı bile bu donuk anlatıyı canlandırmaya yetmemiş. Oyuncuların sahnelerdeki yapaylığı ve diyalogların zorlama duruşu, inandırıcılığı tamamen baltalıyor. Teknik anlamda da televizyon filmi kalitesini aşamayan, son derece sıradan bir görsel işçilik söz konusu.`,
-            "Senaryonun en büyük günahı ise izleyiciyi aptal yerine koyan göze parmak diyalogları ve hiçbir mantıklı temeli olmayan karakter kararları. Eğer bu türe karşı aşırı bir açlığınız yoksa, izlemediğiniz takdirde hayatınızdan hiçbir şey eksilmeyecek, son derece sıradan ve vasat bir yapım."
+            `"${title}", maalesef özgün bir fikri olmayan ve tamamen daha önce yapılmış başarılı ${genreStr} yapımlarının formüllerini kopyalamaya çalışan bir iş. ${director ? `Yönetmen ${director}` : creatorDirLabel}, türe yeni hiçbir şey katmadığı gibi, mevcut formülleri de oldukça ruhsuz ve mekanik bir şekilde ${screenLabel} taşımış. Yapım ilerledikçe kendinizi sürekli 'ben bunu daha önce görmüştüm' derken buluyorsunuz.`,
+            `${castText} gibi isimlerin varlığı bile bu donuk anlatıyı canlandırmaya yetmemiş. Oyuncuların sahnelerdeki yapaylığı ve diyalogların zorlama duruşu, inandırıcılığı tamamen baltalıyor. Teknik anlamda da ucuz televizyon yapımı seviyesini aşamayan, son derece sıradan bir görsel işçilik söz konusu.`,
+            `Senaryonun en büyük hatası ise izleyiciyi küçümseyen göze parmak diyalogları ve hiçbir mantıklı temeli olmayan karakter kararları. Eğer bu türe karşı aşırı bir açlığınız yoksa, izlemediğiniz takdirde hayatınızdan hiçbir şey eksilmeyecek, son derece sıradan ve vasat bir ${type}.`
         ];
         targetAudience = "Sadece ve sadece o türe aşırı hayran olan ve izleyecek hiçbir alternatif bulamayanlar.";
         finalVerdict = "Klişe denizinde boğulan, özgünlükten nasibini almamış son derece sıradan bir zaman dolgusu.";
@@ -147,31 +173,31 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
             "Oyuncuların profesyonellikten uzak, aşırı abartılı performansları"
         ];
         reviewParagraphs = [
-            `"${title}", kelimenin tam anlamıyla sinematik bir felaketin eşiğinde geziniyor. ${dirText}, elindeki bütçeyi ve imkanları o kadar kötü kullanmış ki, ortaya çıkan işi ciddiye almak neredeyse imkansız. ${genreStr} türünün en kötü klişelerini bile beceriksizce uygulayan bu film, izleyiciye iki saat boyunca adeta bir sabır testi sunuyor.`,
+            `"${title}", kelimenin tam anlamıyla anlatısal bir felaketin eşiğinde geziniyor. ${director ? `Yönetmen ${director}` : creatorDirLabel}, elindeki bütçeyi ve imkanları o kadar kötü kullanmış ki, ortaya çıkan işi ciddiye almak neredeyse imkansız. ${genreStr} türünün en kötü klişelerini bile beceriksizce uygulayan bu yapım, izleyiciye adeta bir sabır testi sunuyor.`,
             `Oyuncu kadrosunda yer alan ${castText} kariyerlerinin muhtemelen en kötü performanslarına imza atmışlar. Karakterler o kadar karikatürize ve itici ki, başlarına gelen hiçbir şeyle empati kuramıyorsunuz. Teknik açıdan ise berbat ışıklandırma, kalitesiz ses miksajı ve amatörce yapılmış kurgu gözleri ve kulakları ciddi anlamda tırmalıyor.`,
-            "Senaryoda mantık aramak, çölde su aramaktan farksız. Karakterlerin kararları tamamen absürt, diyaloglar ise o kadar yapay ki insanı izlerken utandırıyor. Bu yapıma harcayacağınız zamanı çok daha faydalı işlere ayırabilir, ruh sağlığınızı koruyabilirsiniz. Net bir şekilde uzak durulması gereken kötü bir deneme."
+            `Senaryoda mantık aramak, çölde su aramaktan farksız. Karakterlerin kararları tamamen absürt, diyaloglar ise o kadar yapay ki insanı izlerken utandırıyor. Bu yapıma harcayacağınız zamanı çok daha faydalı işlere ayırabilir, ruh sağlığınızı koruyabilirsiniz. Net bir şekilde uzak durulması gereken kötü bir ${type} denemesi.`
         ];
-        targetAudience = "Kötü filmlerle dalga geçerek eğlenmek isteyen 'so-bad-it's-good' sinema meraklıları.";
-        finalVerdict = "Zamanınızı ve enerjinizi tamamen sömürecek, profesyonellikten uzak bir sinema kazası.";
+        targetAudience = `Kötü ${typePlural} dalga geçerek eğlenmek isteyen sinema meraklıları.`;
+        finalVerdict = `Zamanınızı ve enerjinizi tamamen sömürecek, profesyonellikten uzak bir ${type} kazası.`;
 
     } else {
         verdict = 'Felaket';
         watchRecommendation = 'UZAK DUR';
-        summary = `Sinema sanatına hakaret niteliğinde. Sıfır estetik, sıfır mantık ve tahammül sınırlarını aşan rezalet bir yapım. Kesinlikle uzak durun.`;
+        summary = `Ekran sanatına hakaret niteliğinde. Sıfır estetik, sıfır mantık ve tahammül sınırlarını aşan rezalet bir yapım. Kesinlikle uzak durun.`;
         strengths = [
             "Yok"
         ];
         weaknesses = [
-            "Sinematografi adına hiçbir şey barındırmaması",
+            "Görsel estetik adına hiçbir şey barındırmaması",
             "Tüm zamanların en kötü senaryolarından birine sahip olması"
         ];
         reviewParagraphs = [
-            `"${title}", kelimenin tam anlamıyla bir sinema faciası. Bu yapımı 'film' kategorisinde değerlendirmek bile sinema sanatına ve bu sektöre emek veren insanlara haksızlık olur. ${dirText}, yönetmenlik adına hiçbir şey yapmamış, sadece kamerayı rastgele açılarla karakterlerin önüne koyup kayda basmış gibi duruyor.`,
-            `${castText} ise oyunculuk yapmayı tamamen unutmuş, diyaloglarını adeta bir kağıttan ruhsuzca okur gibi seslendirmişler. Görsel efektler 90'ların amatör bilgisayar oyunlarından bile daha kötü, kurgu ise filmi tamamen kopuk ve anlaşılmaz bir karmaşaya dönüştürmüş.`,
-            "Senaryo diye önümüze konan şey, muhtemelen yarım saatte yazılmış mantıksız durumlar silsilesi. Ne bir tutarlılık, ne bir hikaye arkı, ne de izlenebilir tek bir saniye mevcut. Bu film sinema salonlarının veya dijital platformların değil, doğrudan çöp kutusunun konusu. Kesinlikle uzak durun, gözlerinize yazık etmeyin."
+            `"${title}", kelimenin tam anlamıyla bir yapım faciası. Bu yapımı 'sanat' kategorisinde değerlendirmek bile bu sektöre emek veren insanlara haksızlık olur. ${director ? `Yönetmen ${director}` : creatorDirLabel}, yönetmenlik adına hiçbir şey yapmamış, sadece kamerayı rastgele açılarla karakterlerin önüne koyup kayda basmış gibi duruyor.`,
+            `${castText} ise oyunculuk yapmayı tamamen unutmuş, diyaloglarını adeta bir kağıttan ruhsuzca okur gibi seslendirmişler. Görsel efektler amatör bilgisayar oyunlarından bile daha kötü, kurgu ise ${typeAccusative} tamamen kopuk ve anlaşılmaz bir karmaşaya dönüştürmüş.`,
+            `Senaryo diye önümüze konan şey, muhtemelen yarım saatte yazılmış mantıksız durumlar silsilesi. Ne bir tutarlılık, ne bir hikaye arkı, ne de izlenebilir tek bir saniye mevcut. Bu ${type} ekranların değil, doğrudan çöp kutusunun konusu. Kesinlikle uzak durun, gözlerinize yazık etmeyin.`
         ];
-        targetAudience = "Hiç kimse. Bu filmi izlemek için mantıklı tek bir sebep bile bulunmuyor.";
-        finalVerdict = "Sinema tarihinin tozlu raflarında bir utanç vesikası olarak kalacak gerçek bir felaket.";
+        targetAudience = `Hiç kimse. Bu ${typeAccusative} izlemek için mantıklı tek bir sebep bile bulunmuyor.`;
+        finalVerdict = `${classicLabel} olmaktan ışık yılı uzakta, bir utanç vesikası olarak kalacak gerçek bir felaket.`;
     }
 
     return {
@@ -187,11 +213,15 @@ const generateLocalReview = (movieDetails, credits, mediaType) => {
     };
 };
 
+// Türkçe kelimelerin baş harfini büyütme yardımcısı
+const typeCapCap = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
     const id = movieDetails.id;
     
-    // Güvenlik ve hız için API çağrılarını tamamen devredışı bıraktık.
-    // Yerel akıllı eleştirmen motorumuz anında ve kusursuz sonuç üretiyor!
     try {
         console.log(`[İzlenti AI] Yerel akıllı eleştirmen motoru çalıştırılıyor: ${movieDetails.title || movieDetails.name}`);
         const data = generateLocalReview(movieDetails, credits, mediaType);
