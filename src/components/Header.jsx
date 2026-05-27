@@ -63,7 +63,7 @@ const Header = ({ watchlistCount }) => {
 
     return (
         <header className="border-b border-white/5 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4">
+            <div className="max-w-6xl mx-auto px-4 py-2.5 md:py-4 flex flex-col md:flex-row items-center gap-2.5 md:gap-4">
                 {/* Logo */}
                 <div
                     className="flex items-center justify-center md:justify-start cursor-pointer group shrink-0 order-1"
@@ -77,7 +77,7 @@ const Header = ({ watchlistCount }) => {
                 </div>
 
                 {/* Instant Search Form */}
-                <form onSubmit={handleSearch} className="flex-1 w-full md:w-auto max-w-xl relative group z-50 order-2">
+                <form onSubmit={handleSearch} className="w-full md:max-w-xl relative group z-50 order-2">
                     <input
                         type="text"
                         placeholder="Film, Dizi, Oyuncu..."
@@ -103,7 +103,7 @@ const Header = ({ watchlistCount }) => {
                                 <div
                                     key={item.id}
                                     onClick={() => handleSelectSuggestion(item)}
-                                    className="flex items-center gap-3 p-3 md:p-4 hover:bg-white/5 cursor-pointer transition border-b border-white/5 last:border-0"
+                                    className="flex items-center gap-4 p-3.5 hover:bg-white/5 cursor-pointer transition border-b border-white/5 last:border-0"
                                 >
                                     <div className="w-12 h-16 md:w-14 md:h-20 bg-slate-800 rounded overflow-hidden flex-shrink-0">
                                         {item.poster_path ? (
@@ -113,13 +113,13 @@ const Header = ({ watchlistCount }) => {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-white text-sm font-medium truncate">{item.title || item.name}</h4>
-                                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                                            <span className="uppercase tracking-wider text-[10px] bg-white/10 px-1.5 py-0.5 rounded">{item.media_type === 'movie' ? 'Film' : 'Dizi'}</span>
-                                            <span>{(item.release_date || item.first_air_date || '').split('-')[0]}</span>
+                                        <h4 className="text-white text-sm font-semibold truncate">{item.title || item.name}</h4>
+                                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-1.5">
+                                            <span className="uppercase tracking-wider text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">{item.media_type === 'movie' ? 'Film' : 'Dizi'}</span>
+                                            <span className="font-medium">{(item.release_date || item.first_air_date || '').split('-')[0]}</span>
                                             {item.vote_average > 0 && (() => {
                                                 const badge = getAIBadge(item.vote_average, item.vote_count);
-                                                return <span className={`flex items-center gap-1 ${badge.color}`}><span>{badge.icon}</span> {badge.text}</span>;
+                                                return <span className={`flex items-center gap-1 ${badge.color} font-medium`}><span>{badge.icon}</span> {badge.text}</span>;
                                             })()}
                                         </div>
                                     </div>
@@ -132,7 +132,7 @@ const Header = ({ watchlistCount }) => {
                 {/* Watchlist Button */}
                 <button
                     onClick={() => navigate('/watchlist')}
-                    className="w-auto flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl md:rounded-full transition group relative order-3"
+                    className="hidden sm:flex w-auto items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl md:rounded-full transition group relative order-3"
                     title="İzleme Listem"
                 >
                     <Heart className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-hover:text-red-400" />
