@@ -266,71 +266,71 @@ export const getGeminiCriticAvatar = (verdict) => {
     const v = (verdict || '').toLowerCase();
     if (v.includes('başyapıt')) {
         return {
-            face: '🤩',
+            url: 'critic/liked_oscar.png',
             title: 'SİNEMA DUAYENİ',
-            color: 'text-amber-400 border-amber-500/30',
-            bg: 'bg-amber-500/10',
-            desc: 'Gözleri parıldayarak ayakta alkışlıyor!'
+            color: 'border-amber-500/30',
+            bg: 'bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+            desc: 'Ayakta alkışlıyor!'
         };
     }
     if (v.includes('çok iyi')) {
         return {
-            face: '😎',
+            url: 'critic/liked_heart.png',
             title: 'SEÇKİN ELEŞTİRMEN',
-            color: 'text-emerald-400 border-emerald-500/30',
-            bg: 'bg-emerald-500/10',
-            desc: 'Son derece memnun, şapka çıkarıyor.'
+            color: 'border-emerald-500/30',
+            bg: 'bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+            desc: 'Şapka çıkarıyor.'
         };
     }
     if (v.includes('iyi') && !v.includes('çok')) {
         return {
-            face: '🙂',
+            url: 'critic/liked_thumbsup.png',
             title: 'SİNEMA YAZARI',
-            color: 'text-cyan-400 border-cyan-500/30',
-            bg: 'bg-cyan-500/10',
-            desc: 'Keyifle izledi, tebessümle öneriyor.'
+            color: 'border-cyan-500/30',
+            bg: 'bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+            desc: 'Tebessümle öneriyor.'
         };
     }
     if (v.includes('ortalama')) {
         return {
-            face: '🤔',
+            url: 'critic/liked_popcorn.png',
             title: 'SİNEMA AKADEMİSYENİ',
-            color: 'text-blue-400 border-white/10',
-            bg: 'bg-[#0b0f19]/80',
-            desc: 'Kararsız kaldı, çelişkileri düşünüyor.'
+            color: 'border-blue-500/20',
+            bg: 'bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]',
+            desc: 'Kararsız ama izlenebilir buldu.'
         };
     }
     if (v.includes('vasat')) {
         return {
-            face: '😐',
+            url: 'critic/disliked_bored.png',
             title: 'SİNEMA GÖZLEMCİSİ',
-            color: 'text-orange-400 border-orange-500/20',
-            bg: 'bg-orange-500/5',
-            desc: 'Esneyerek saatine bakıyor, sıkıldı.'
+            color: 'border-orange-500/20',
+            bg: 'bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)]',
+            desc: 'Sıkıntıdan esniyor.'
         };
     }
     if (v.includes('kötü')) {
         return {
-            face: '😫',
+            url: 'critic/disliked_thumbsdown.png',
             title: 'ACI ELEŞTİRMEN',
-            color: 'text-red-400 border-red-500/25',
-            bg: 'bg-red-500/5',
-            desc: 'Başını ellerinin arasına almış, acı çekiyor!'
+            color: 'border-red-500/25',
+            bg: 'bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
+            desc: 'Acı çekerek thumbs down veriyor!'
         };
     }
     if (v.includes('felaket')) {
         return {
-            face: '🤮',
+            url: 'critic/disliked_brokenheart.png',
             title: 'ACIMASIZ SİNEFİL',
-            color: 'text-red-600 border-red-700/30',
-            bg: 'bg-red-950/20',
-            desc: 'Öfkeden deliye döndü, salonu terk ediyor!'
+            color: 'border-red-700/30',
+            bg: 'bg-red-950/20 shadow-[0_0_15px_rgba(185,28,28,0.2)]',
+            desc: 'Öfkeden salonu terk ediyor!'
         };
     }
     return {
-        face: '🧐',
+        url: 'critic/liked_clapper.png',
         title: 'SİNEMA YAZARI',
-        color: 'text-cyan-400 border-cyan-500/30',
+        color: 'border-cyan-500/30',
         bg: 'bg-cyan-500/10',
         desc: 'Merakla inceliyor.'
     };

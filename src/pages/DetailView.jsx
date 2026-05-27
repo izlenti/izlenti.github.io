@@ -351,8 +351,12 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-4 md:p-5">
                                                     {/* Critic Portrait & Info */}
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-14 h-14 rounded-2xl ${avatar.bg} border ${avatar.color} flex items-center justify-center text-3xl shadow-xl shrink-0`}>
-                                                            {avatar.face}
+                                                        <div className={`w-14 h-14 rounded-2xl ${avatar.bg} border ${avatar.color} overflow-hidden shadow-xl shrink-0 flex items-center justify-center p-1`}>
+                                                            <img 
+                                                                src={`${import.meta.env.BASE_URL || '/'}${avatar.url}`} 
+                                                                alt={avatar.title} 
+                                                                className="w-full h-full object-contain" 
+                                                            />
                                                         </div>
                                                         <div>
                                                             <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Eleştirmen Tepkisi</span>
