@@ -3,19 +3,22 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Film, Star, PlayCircle, Award, ExternalLink, Heart, Clock,
-    Brain, ThumbsUp, ChevronRight, Loader2
+    Brain, ThumbsUp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, Sparkles
 } from 'lucide-react';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL, BACKDROP_BASE_URL, LOGO_BASE_URL } from '../lib/constants.jsx';
 import { generateDeepAnalysis, translateText, getExternalLinks, getAIBadge, getReleaseStatus, formatTurkishDate } from '../lib/utils';
+import { fetchGeminiReview, getGeminiVerdictStyle, getWatchRecStyle } from '../lib/gemini';
 
 const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
-    const { type, id } = useParams(); // Expected route: /:type/:id
+    const { type, id } = useParams();
     const navigate = useNavigate();
 
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [analysis, setAnalysis] = useState(null);
+    const [geminiReview, setGeminiReview] = useState(null);
+    const [geminiLoading, setGeminiLoading] = useState(false);
     const [providers, setProviders] = useState(null);
     const [recommendations, setRecommendations] = useState([]);
     const [trailerKey, setTrailerKey] = useState(null);
@@ -80,11 +83,22 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                 // Recommendations
                 setRecommendations(recommendationsData.results?.slice(0, 5) || []);
 
-                // Analysis
+                // Analysis (fallback / yardımcı veriler)
                 const analysisObj = generateDeepAnalysis(details, credits, keywords, reviews, type);
                 setAnalysis(analysisObj);
 
                 setMovie({ ...details, media_type: type, external_ids: externalIds });
+
+                // Gemini AI Gerçek Zamanlı Yorum (asenkron, sayfa yüklenirken başlar)
+                setGeminiLoading(true);
+                fetchGeminiReview(details, credits, type)
+                    .then(result => {
+                        if (result.success) {
+                            setGeminiReview(result.data);
+                        }
+                    })
+                    .catch(err => console.error('[Gemini]', err))
+                    .finally(() => setGeminiLoading(false));
 
             } catch (err) {
                 console.error(err);
@@ -262,9 +276,9 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                         </div>
 
                         {/* ============================================================ */}
-                        {/* 🤖 İZLENTİ AI PRO SİNEMATİK RAPORU (FULL AI REPORT)          */}
+                        {/* 🤖 İZLENTİ AI — GEMİNİ TABANLI GERÇEK YAPAY ZEKA ANALİZİ    */}
                         {/* ============================================================ */}
-                        <div className="bg-[#030712]/90 backdrop-blur-2xl border border-cyan-500/20 rounded-[2rem] p-5 md:p-6 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden ring-1 ring-white/5">
+                        <div className="bg-[#030712]/90 backdrop-blur-2xl border border-cyan-500/20 rounded-[2rem] p-5 md:p-8 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden ring-1 ring-white/5">
                             {/* Neon glow effects */}
                             <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
                             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -272,120 +286,204 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-gradient-to-tr from-cyan-500 to-purple-600 p-2 rounded-xl text-white shadow-lg shadow-cyan-500/20">
-                                        <Brain className="w-5 h-5 animate-pulse" />
+                                    <div className="bg-gradient-to-tr from-cyan-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg shadow-cyan-500/20">
+                                        <Sparkles className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">🤖 İZLENTİ AI PRO SİNEMATİK RAPORU</h4>
+                                        <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">İZLENTİ AI YAPAY ZEKA ANALİZİ</h4>
                                         <p className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5 flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                            AKTİF ANALİZ MOTORU ÇALIŞIYOR
+                                            <span className={`w-1.5 h-1.5 rounded-full ${geminiLoading ? 'bg-amber-500 animate-ping' : geminiReview ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
+                                            {geminiLoading ? 'GEMİNİ ANALİZ EDİYOR...' : geminiReview ? 'GEMİNİ ANALİZİ TAMAMLANDI' : 'FALLBACK MODU'}
                                         </p>
                                     </div>
                                 </div>
                                 <span className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    PRO MODEL 3.5
+                                    {geminiReview ? 'Gemini AI' : 'Lokal'}
                                 </span>
                             </div>
 
-                            {/* Report Container */}
-                            <div className="space-y-4 relative z-10 text-left w-full">
-                                <div className="bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-5 md:p-6 space-y-4 w-full shadow-xl">
-                                    
-                                    {/* Greeting & Info */}
-                                    <p className="text-slate-200 text-sm leading-relaxed">
-                                        Yapay zeka analiz motorumuzun <strong>"{movie.title || movie.name}" ({analysis.year})</strong> {analysis.term}i üzerinde gerçekleştirdiği geniş spektrumlu tarama sonucunda elde edilen sinematik veriler şu şekildedir:
-                                    </p>
+                            {/* CONTENT: Gemini Loading / Gemini Review / Fallback */}
+                            <div className="relative z-10">
 
-                                    {/* Detailed Bullet Points mimicking the user's screenshot */}
-                                    <ul className="space-y-3.5 pl-1.5 border-l-2 border-cyan-500/20 my-4">
-                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Eleştirel Görüşler & Yorumlar:</strong>
-                                            {analysis.verdictReason}
-                                        </li>
-                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 Anlatım Tarzı & Sinematik Dil:</strong>
-                                            "{movie.title || movie.name}", {movie.runtime || '?'} dakikalık süresi boyunca <strong>{analysis.psychProfile.mood}</strong> bir tonda seyrediyor. Sinirsel yapay zeka analizimize göre anlatı, özellikle <em>{analysis.psychProfile.traits.join(', ')}</em> gibi temel niteliklerle öne çıkıyor.
-                                        </li>
-                                        <li className="text-slate-300 text-xs md:text-sm leading-relaxed">
-                                            <strong className="text-cyan-400 font-bold block mb-0.5">🔹 İzleyici Hedefi & Konumlandırma:</strong>
-                                            Bu yapım öncelikli olarak <strong>"{analysis.targetAudience?.title}"</strong> kitlesine hitap etmektedir. Yapay zeka veri havuzumuza göre, türü seven izleyiciler için oldukça sürükleyici bir deneyim vaat ediyor.
-                                        </li>
-                                    </ul>
-
-                                    {/* Transition Paragraph */}
-                                    <p className="text-slate-200 text-sm leading-relaxed italic bg-cyan-950/20 border border-cyan-500/10 p-3.5 rounded-xl">
-                                        <strong>Kısacası;</strong> {analysis.epicSynopsis.aiTouch}
-                                    </p>
-
-                                    {/* AI Cinematic Final Verdict (Özetle yerine daha güçlü başlık) */}
-                                    <div className="bg-[#040813] border border-cyan-500/30 rounded-2xl p-4 md:p-5 space-y-4 shadow-inner">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-3 gap-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xl">🏆</span>
-                                                <div>
-                                                    <span className="text-cyan-400 text-[9px] font-black uppercase tracking-wider block">AI Sinematik Nihai Kararı</span>
-                                                    <span className={`inline-flex items-center gap-1 bg-gradient-to-r ${analysis.verdictClass} px-2.5 py-1 rounded text-white font-bold text-xs shadow-md mt-0.5`}>
-                                                        {analysis.verdictIcon} {analysis.verdict}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Success Meter */}
-                                            <div className="min-w-[120px]">
-                                                <div className="flex justify-between items-center mb-0.5">
-                                                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Başarı Endeksi</span>
-                                                    <span className="text-xs font-black text-cyan-300">{analysis.matchRate}%</span>
-                                                </div>
-                                                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden p-[0.5px]">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-1000"
-                                                        style={{ width: `${analysis.matchRate}%` }}
-                                                    />
-                                                </div>
-                                            </div>
+                                {/* --- GEMİNİ YÜKLEME ANİMASYONU --- */}
+                                {geminiLoading && !geminiReview && (
+                                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 bg-cyan-500 blur-2xl opacity-20 animate-pulse"></div>
+                                            <Sparkles className="w-12 h-12 text-cyan-400 animate-spin relative z-10" style={{ animationDuration: '3s' }} />
                                         </div>
-
-                                        {/* Pros & Cons List */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                                            <div className="space-y-1.5">
-                                                <span className="text-emerald-400 font-bold text-[9px] uppercase tracking-wider block">✓ İZLEME SEBEPLERİ:</span>
-                                                <ul className="space-y-1">
-                                                    {analysis.whyWatch?.slice(0, 3).map((item, idx) => (
-                                                        <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
-                                                            <span className="text-emerald-500 text-sm mt-[-2px]">✓</span>
-                                                            <span>{item}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <span className="text-rose-400 font-bold text-[9px] uppercase tracking-wider block">✕ KAÇINMA SEBEPLERİ:</span>
-                                                <ul className="space-y-1">
-                                                    {analysis.whySkip?.slice(0, 3).map((item, idx) => (
-                                                        <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
-                                                            <span className="text-rose-500 text-sm mt-[-2px]">✕</span>
-                                                            <span>{item}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
+                                        <div className="text-center space-y-1">
+                                            <p className="text-cyan-300 text-sm font-bold animate-pulse">Gemini yapay zekası analiz ediyor...</p>
+                                            <p className="text-slate-500 text-xs">Keskin, dürüst ve derinlikli bir sinematik rapor hazırlanıyor</p>
                                         </div>
-
-                                        {/* Final Verdict Word */}
-                                        <div className="border-t border-white/5 pt-3 mt-3 flex items-start gap-2.5">
-                                            <span className="text-xl text-cyan-400">💡</span>
-                                            <p className="text-cyan-200 text-xs font-semibold leading-relaxed italic">
-                                                "{analysis.finalWord}"
-                                            </p>
+                                        <div className="flex gap-1">
+                                            {[0,1,2,3,4].map(i => (
+                                                <div key={i} className="w-2 h-2 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                            ))}
                                         </div>
                                     </div>
+                                )}
 
-                                    {/* Ending Interactive Question */}
-                                    <p className="text-slate-300 text-xs leading-relaxed pt-2 border-t border-white/5">
-                                        Bu yapımı belirli bir oyuncu veya yönetmen kadrosu nedeniyle mi merak ediyorsunuz, yoksa size <strong>{movie.genres?.slice(0, 2).map(g => g.name).join(' veya ')}</strong> türünde daha nokta atışı başka bir yapay zeka önerisi mi sunayım?
-                                    </p>
-                                </div>
+                                {/* --- GEMİNİ GERÇEK YAPAY ZEKA YORUMU --- */}
+                                {geminiReview && (
+                                    <div className="space-y-5">
+
+                                        {/* Verdict + Score Header */}
+                                        {(() => {
+                                            const vs = getGeminiVerdictStyle(geminiReview.verdict);
+                                            const wr = getWatchRecStyle(geminiReview.watchRecommendation);
+                                            return (
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-4 md:p-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-3xl">{vs.icon}</span>
+                                                        <div>
+                                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Nihai Kararı</span>
+                                                            <span className={`inline-flex items-center gap-1.5 bg-gradient-to-r ${vs.gradient} px-3 py-1 rounded-lg text-white font-black text-sm shadow-lg mt-0.5`}>
+                                                                {geminiReview.verdict}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        {/* AI Score */}
+                                                        {geminiReview.score && (
+                                                            <div className="text-center">
+                                                                <span className="text-[8px] text-slate-500 font-bold uppercase block">AI Puan</span>
+                                                                <span className={`text-2xl font-black ${vs.color}`}>{geminiReview.score}</span>
+                                                                <span className="text-slate-600 text-xs">/10</span>
+                                                            </div>
+                                                        )}
+                                                        {/* Watch Recommendation Badge */}
+                                                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-xs ${wr.bg} ${wr.color}`}>
+                                                            <span className="text-base">{wr.icon}</span>
+                                                            {wr.label}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Keskin Özet */}
+                                        {geminiReview.summary && (
+                                            <div className="bg-cyan-950/20 border border-cyan-500/15 rounded-xl p-4 md:p-5">
+                                                <p className="text-slate-200 text-sm md:text-base leading-relaxed font-medium">
+                                                    {geminiReview.summary}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Derinlemesine Analiz */}
+                                        {geminiReview.review && (
+                                            <div className="bg-[#0b0f19]/60 border border-white/5 rounded-2xl p-5 md:p-6 space-y-4">
+                                                <h5 className="text-cyan-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                                                    <Brain className="w-4 h-4" /> Derinlemesine Yapay Zeka Analizi
+                                                </h5>
+                                                <div className="text-slate-300 text-sm md:text-[15px] leading-[1.8] space-y-3 font-light">
+                                                    {geminiReview.review.split('\n').filter(p => p.trim()).map((paragraph, idx) => (
+                                                        <p key={idx}>{paragraph}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Güçlü ve Zayıf Yönler — Yan Yana */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Güçlü Yönler */}
+                                            {geminiReview.strengths?.length > 0 && (
+                                                <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-4 space-y-2.5">
+                                                    <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                                                        <CheckCircle2 className="w-3.5 h-3.5" /> GÜÇLÜ YÖNLERİ
+                                                    </span>
+                                                    <ul className="space-y-2">
+                                                        {geminiReview.strengths.map((s, i) => (
+                                                            <li key={i} className="text-slate-300 text-xs md:text-sm leading-relaxed flex items-start gap-2">
+                                                                <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                                                                <span>{s}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {/* Zayıf Yönler */}
+                                            {geminiReview.weaknesses?.length > 0 && (
+                                                <div className="bg-rose-500/5 border border-rose-500/15 rounded-xl p-4 space-y-2.5">
+                                                    <span className="text-rose-400 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                                                        <XCircle className="w-3.5 h-3.5" /> ZAYIF YÖNLERİ
+                                                    </span>
+                                                    <ul className="space-y-2">
+                                                        {geminiReview.weaknesses.map((w, i) => (
+                                                            <li key={i} className="text-slate-300 text-xs md:text-sm leading-relaxed flex items-start gap-2">
+                                                                <span className="text-rose-500 mt-0.5 shrink-0">✕</span>
+                                                                <span>{w}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Hedef Kitle */}
+                                        {geminiReview.targetAudience && (
+                                            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 flex items-start gap-3">
+                                                <span className="text-lg shrink-0">🎯</span>
+                                                <div>
+                                                    <span className="text-slate-500 text-[9px] font-bold uppercase tracking-wider block mb-1">Kime Hitap Ediyor?</span>
+                                                    <p className="text-slate-300 text-xs md:text-sm leading-relaxed">{geminiReview.targetAudience}</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Son Söz */}
+                                        {geminiReview.finalVerdict && (
+                                            <div className="bg-gradient-to-r from-cyan-950/30 to-purple-950/30 border border-cyan-500/20 rounded-xl p-4 flex items-start gap-3">
+                                                <span className="text-xl shrink-0">💡</span>
+                                                <p className="text-cyan-200 text-sm font-semibold leading-relaxed italic">
+                                                    "{geminiReview.finalVerdict}"
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* --- FALLBACK: Gemini yoksa eski deterministik analiz --- */}
+                                {!geminiLoading && !geminiReview && (
+                                    <div className="space-y-4">
+                                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center gap-2.5 text-xs">
+                                            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                                            <span className="text-amber-300">Gemini AI şu anda kullanılamıyor. Lokal analiz motoru ile üretilen yorum gösteriliyor.</span>
+                                        </div>
+                                        <div className="bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-5 md:p-6 space-y-4">
+                                            <p className="text-slate-300 text-sm leading-relaxed">{analysis.verdictReason}</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <span className="text-emerald-400 font-bold text-[9px] uppercase tracking-wider block">✓ İZLEME SEBEPLERİ:</span>
+                                                    <ul className="space-y-1">
+                                                        {analysis.whyWatch?.slice(0, 3).map((item, idx) => (
+                                                            <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
+                                                                <span className="text-emerald-500 text-sm mt-[-2px]">✓</span>
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <span className="text-rose-400 font-bold text-[9px] uppercase tracking-wider block">✕ KAÇINMA SEBEPLERİ:</span>
+                                                    <ul className="space-y-1">
+                                                        {analysis.whySkip?.slice(0, 3).map((item, idx) => (
+                                                            <li key={idx} className="text-slate-300 text-xs leading-relaxed flex items-start gap-1.5">
+                                                                <span className="text-rose-500 text-sm mt-[-2px]">✕</span>
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div className="border-t border-white/5 pt-3 flex items-start gap-2.5">
+                                                <span className="text-xl text-cyan-400">💡</span>
+                                                <p className="text-cyan-200 text-xs font-semibold leading-relaxed italic">"{analysis.finalWord}"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
