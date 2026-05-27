@@ -230,3 +230,78 @@ export const getWatchRecStyle = (rec) => {
     if (r.includes('izle')) return { icon: '✅', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20', label: 'İZLE' };
     return { icon: '🤖', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', label: rec || 'BELİRSİZ' };
 };
+
+// --- ELEŞTİRMEN AVATARI VE İFADE EŞLEŞTİRİSİ ---
+export const getGeminiCriticAvatar = (verdict) => {
+    const v = (verdict || '').toLowerCase();
+    if (v.includes('başyapıt')) {
+        return {
+            face: '🤩',
+            title: 'SİNEMA DUAYENİ',
+            color: 'text-amber-400 border-amber-500/30',
+            bg: 'bg-amber-500/10',
+            desc: 'Gözleri parıldayarak ayakta alkışlıyor!'
+        };
+    }
+    if (v.includes('çok iyi')) {
+        return {
+            face: '😎',
+            title: 'SEÇKİN ELEŞTİRMEN',
+            color: 'text-emerald-400 border-emerald-500/30',
+            bg: 'bg-emerald-500/10',
+            desc: 'Son derece memnun, şapka çıkarıyor.'
+        };
+    }
+    if (v.includes('iyi') && !v.includes('çok')) {
+        return {
+            face: '🙂',
+            title: 'SİNEMA YAZARI',
+            color: 'text-cyan-400 border-cyan-500/30',
+            bg: 'bg-cyan-500/10',
+            desc: 'Keyifle izledi, tebessümle öneriyor.'
+        };
+    }
+    if (v.includes('ortalama')) {
+        return {
+            face: '🤔',
+            title: 'SİNEMA AKADEMİSYENİ',
+            color: 'text-blue-400 border-white/10',
+            bg: 'bg-[#0b0f19]/80',
+            desc: 'Kararsız kaldı, çelişkileri düşünüyor.'
+        };
+    }
+    if (v.includes('vasat')) {
+        return {
+            face: '😐',
+            title: 'SİNEMA GÖZLEMCİSİ',
+            color: 'text-orange-400 border-orange-500/20',
+            bg: 'bg-orange-500/5',
+            desc: 'Esneyerek saatine bakıyor, sıkıldı.'
+        };
+    }
+    if (v.includes('kötü')) {
+        return {
+            face: '😫',
+            title: 'ACI ELEŞTİRMEN',
+            color: 'text-red-400 border-red-500/25',
+            bg: 'bg-red-500/5',
+            desc: 'Başını ellerinin arasına almış, acı çekiyor!'
+        };
+    }
+    if (v.includes('felaket')) {
+        return {
+            face: '🤮',
+            title: 'ACIMASIZ SİNEFİL',
+            color: 'text-red-600 border-red-700/30',
+            bg: 'bg-red-950/20',
+            desc: 'Öfkeden deliye döndü, salonu terk ediyor!'
+        };
+    }
+    return {
+        face: '🧐',
+        title: 'SİNEMA YAZARI',
+        color: 'text-cyan-400 border-cyan-500/30',
+        bg: 'bg-cyan-500/10',
+        desc: 'Merakla inceliyor.'
+    };
+};

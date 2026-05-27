@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL, BACKDROP_BASE_URL, LOGO_BASE_URL } from '../lib/constants.jsx';
 import { generateDeepAnalysis, translateText, getExternalLinks, getAIBadge, getReleaseStatus, formatTurkishDate } from '../lib/utils';
-import { fetchGeminiReview, getGeminiVerdictStyle, getWatchRecStyle } from '../lib/gemini';
+import { fetchGeminiReview, getGeminiVerdictStyle, getWatchRecStyle, getGeminiCriticAvatar } from '../lib/gemini';
 
 const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
     const { type, id } = useParams();
@@ -307,12 +307,12 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                          <h4 className="text-white font-black text-sm md:text-base tracking-wide uppercase">İZLENTİ AI YAPAY ZEKA ELEŞTİRİSİ</h4>
                                          <p className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase mt-0.5 flex items-center gap-1.5">
                                              <span className={`w-1.5 h-1.5 rounded-full ${geminiLoading ? 'bg-amber-500 animate-ping' : geminiReview ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
-                                             {geminiLoading ? 'YAPAY ZEKA FİLMİ ANALİZ EDİYOR...' : 'YAPAY ZEKA ELEŞTİRİSİ HAZIR'}
+                                             {geminiLoading ? 'YAPAY ZEKA ELEŞTİRMENİ DÜŞÜNÜYOR...' : 'YAPAY ZEKA ANALİZİ TAMAMLANDI'}
                                          </p>
                                      </div>
                                  </div>
                                  <span className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                     Moviq AI Eleştirmeni
+                                     İzlenti AI Eleştirmeni
                                  </span>
                              </div>
 
@@ -327,8 +327,8 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                             <Sparkles className="w-12 h-12 text-cyan-400 animate-spin relative z-10" style={{ animationDuration: '3s' }} />
                                         </div>
                                         <div className="text-center space-y-1">
-                                            <p className="text-cyan-300 text-sm font-bold animate-pulse">Gemini yapay zekası analiz ediyor...</p>
-                                            <p className="text-slate-500 text-xs">Keskin, dürüst ve derinlikli bir sinematik rapor hazırlanıyor</p>
+                                            <p className="text-cyan-300 text-sm font-bold animate-pulse">Yapay zeka eleştirmeni filmi inceliyor...</p>
+                                            <p className="text-slate-500 text-xs">Dürüst, cesur ve derinlikli bir sinematik analiz yazılıyor</p>
                                         </div>
                                         <div className="flex gap-1">
                                             {[0,1,2,3,4].map(i => (
@@ -342,33 +342,44 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                 {geminiReview && (
                                     <div className="space-y-5">
 
-                                        {/* Verdict + Score Header */}
+                                        {/* Verdict + Score Header with Critic Avatar */}
                                         {(() => {
                                             const vs = getGeminiVerdictStyle(geminiReview.verdict);
                                             const wr = getWatchRecStyle(geminiReview.watchRecommendation);
+                                            const avatar = getGeminiCriticAvatar(geminiReview.verdict);
                                             return (
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-4 md:p-5">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-3xl">{vs.icon}</span>
+                                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-4 md:p-5">
+                                                    {/* Critic Portrait & Info */}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-14 h-14 rounded-2xl ${avatar.bg} border ${avatar.color} flex items-center justify-center text-3xl shadow-xl shrink-0`}>
+                                                            {avatar.face}
+                                                        </div>
                                                         <div>
-                                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">AI Nihai Kararı</span>
-                                                            <span className={`inline-flex items-center gap-1.5 bg-gradient-to-r ${vs.gradient} px-3 py-1 rounded-lg text-white font-black text-sm shadow-lg mt-0.5`}>
-                                                                {geminiReview.verdict}
-                                                            </span>
+                                                            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Eleştirmen Tepkisi</span>
+                                                            <h5 className="text-white font-black text-xs md:text-sm tracking-wide mt-0.5">{avatar.title}</h5>
+                                                            <span className="text-[10px] text-slate-400 block mt-0.5">{avatar.desc}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-4">
-                                                        {/* AI Score */}
+
+                                                    {/* Verdict and Score */}
+                                                    <div className="flex flex-wrap items-center gap-4 w-full md:w-auto border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
+                                                        <div>
+                                                            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">AI Kararı</span>
+                                                            <span className={`inline-flex items-center gap-1.5 bg-gradient-to-r ${vs.gradient} px-2.5 py-1 rounded-lg text-white font-black text-[11px] md:text-xs shadow-lg mt-1`}>
+                                                                {vs.icon} {geminiReview.verdict}
+                                                            </span>
+                                                        </div>
+                                                        
                                                         {geminiReview.score && (
-                                                            <div className="text-center">
+                                                            <div className="text-center px-2">
                                                                 <span className="text-[8px] text-slate-500 font-bold uppercase block">AI Puan</span>
-                                                                <span className={`text-2xl font-black ${vs.color}`}>{geminiReview.score}</span>
-                                                                <span className="text-slate-600 text-xs">/10</span>
+                                                                <span className={`text-xl font-black ${vs.color}`}>{geminiReview.score}</span>
+                                                                <span className="text-slate-600 text-[10px]">/10</span>
                                                             </div>
                                                         )}
-                                                        {/* Watch Recommendation Badge */}
-                                                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-xs ${wr.bg} ${wr.color}`}>
-                                                            <span className="text-base">{wr.icon}</span>
+
+                                                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-[10px] md:text-xs ${wr.bg} ${wr.color}`}>
+                                                            <span className="text-sm">{wr.icon}</span>
                                                             {wr.label}
                                                         </div>
                                                     </div>
@@ -502,78 +513,78 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                         </div>
 
                         {/* 3D Glass Animated Metric Boxes Grid (Middle Row - 4 Columns) */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 relative z-10 perspective-1000">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10 perspective-1000">
                             
                             {/* Card 1: Ruh Hali & Ton */}
-                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-cyan-500/30 rounded-xl p-3.5 flex flex-col justify-between active:scale-95 tilt-card cursor-pointer">
-                                <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                    <span>🌑</span> Ton & Atmosfer
+                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-cyan-500/30 rounded-2xl p-5 flex flex-col justify-between active:scale-95 tilt-card cursor-pointer transition-all duration-300">
+                                <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span className="text-sm">🌑</span> Ton & Atmosfer
                                 </div>
-                                <div className="space-y-0.5">
-                                    <div className="text-white text-xs font-black truncate">{analysis.psychProfile.mood}</div>
-                                    <div className="text-slate-400 text-[9px] truncate">{analysis.psychProfile.traits[0] || "Dengeli Anlatı"}</div>
+                                <div className="space-y-1">
+                                    <div className="text-white text-sm font-black">{analysis.psychProfile.mood}</div>
+                                    <div className="text-slate-400 text-xs leading-normal">{analysis.psychProfile.traits[0] || "Dengeli Anlatı"}</div>
                                 </div>
                             </div>
 
                             {/* Card 2: Doğru Zamanlama */}
-                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-purple-500/30 rounded-xl p-3.5 flex flex-col justify-between active:scale-95 tilt-card-reverse cursor-pointer">
-                                <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                    <span>{analysis.watchTiming.icon}</span> Zamanlama
+                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-purple-500/30 rounded-2xl p-5 flex flex-col justify-between active:scale-95 tilt-card-reverse cursor-pointer transition-all duration-300">
+                                <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span className="text-sm">{analysis.watchTiming.icon}</span> Zamanlama
                                 </div>
-                                <div className="space-y-0.5">
-                                    <div className="text-cyan-400 text-xs font-black truncate">{analysis.watchTiming.title}</div>
-                                    <div className="text-slate-400 text-[9px] truncate">{analysis.watchTiming.desc}</div>
+                                <div className="space-y-1">
+                                    <div className="text-cyan-400 text-sm font-black">{analysis.watchTiming.title}</div>
+                                    <div className="text-slate-400 text-xs leading-normal">{analysis.watchTiming.desc}</div>
                                 </div>
                             </div>
 
                             {/* Card 3: Tekrar İzleme Skoru */}
-                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-cyan-500/30 rounded-xl p-3.5 flex flex-col justify-between active:scale-95 tilt-card cursor-pointer">
-                                <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                    <span>{analysis.rewatchValue.icon}</span> Tekrar İzleme
+                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-cyan-500/30 rounded-2xl p-5 flex flex-col justify-between active:scale-95 tilt-card cursor-pointer transition-all duration-300">
+                                <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span className="text-sm">{analysis.rewatchValue.icon}</span> Tekrar İzleme
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="text-white text-xs font-black">{analysis.rewatchValue.label}</div>
-                                    <div className="flex gap-[1.5px]">
+                                <div className="space-y-2">
+                                    <div className="text-white text-sm font-black">{analysis.rewatchValue.label}</div>
+                                    <div className="flex gap-[2px]">
                                         {[...Array(10)].map((_, i) => (
-                                            <div key={i} className={`w-1 h-1.5 rounded-[1px] ${i < analysis.rewatchValue.score ? 'bg-cyan-500 shadow-[0_0_3px_#22d3ee]' : 'bg-white/10'}`} />
+                                            <div key={i} className={`w-1.5 h-2 rounded-[2px] ${i < analysis.rewatchValue.score ? 'bg-cyan-500 shadow-[0_0_4px_#22d3ee]' : 'bg-white/10'}`} />
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Card 4: Bütçe / Sezon */}
-                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-purple-500/30 rounded-xl p-3.5 flex flex-col justify-between active:scale-95 tilt-card-reverse cursor-pointer">
+                            <div className="bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-purple-500/30 rounded-2xl p-5 flex flex-col justify-between active:scale-95 tilt-card-reverse cursor-pointer transition-all duration-300">
                                 {analysis.budgetAnalysis ? (
                                     <>
-                                        <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                            <span>📊</span> Bütçe & Gişe
+                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                            <span className="text-sm">📊</span> Bütçe & Gişe
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <div className="text-white text-xs font-black flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <div className="text-white text-sm font-black flex items-center justify-between">
                                                 <span>Gişe:</span>
                                                 <span className="text-emerald-400">{analysis.budgetAnalysis.revenueFormatted}</span>
                                             </div>
-                                            <div className="text-slate-400 text-[9px] truncate">Bütçe: {analysis.budgetAnalysis.budgetFormatted}</div>
+                                            <div className="text-slate-400 text-xs">Bütçe: {analysis.budgetAnalysis.budgetFormatted}</div>
                                         </div>
                                     </>
                                 ) : analysis.seasonInfo ? (
                                     <>
-                                        <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                            <span>📺</span> Sezon Bilgisi
+                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                            <span className="text-sm">📺</span> Sezon Bilgisi
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <div className="text-white text-xs font-black truncate">{analysis.seasonInfo.seasons} Sezon</div>
-                                            <div className="text-slate-400 text-[9px] truncate">{analysis.seasonInfo.episodes} Bölüm</div>
+                                        <div className="space-y-1">
+                                            <div className="text-white text-sm font-black">{analysis.seasonInfo.seasons} Sezon</div>
+                                            <div className="text-slate-400 text-xs">{analysis.seasonInfo.episodes} Bölüm ({analysis.seasonInfo.statusTr})</div>
                                         </div>
                                     </>
                                 ) : (
                                     <>
-                                        <div className="text-slate-400 text-[8px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                                            <span>⏳</span> Yayın Durumu
+                                        <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                            <span className="text-sm">⏳</span> Yayın Durumu
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <div className="text-white text-xs font-black">Yayınlandı</div>
-                                            <div className="text-slate-400 text-[9px] truncate">İzlenti Raporlu</div>
+                                        <div className="space-y-1">
+                                            <div className="text-white text-sm font-black">Yayınlandı</div>
+                                            <div className="text-slate-400 text-xs">İzlenti Raporlu</div>
                                         </div>
                                     </>
                                 )}
