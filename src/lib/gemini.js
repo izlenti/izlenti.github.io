@@ -2,7 +2,7 @@
 // Gemini API'den keskin, net ve dürüst yapay zeka yorumları alır.
 // Cache mekanizması ile aynı film için tekrar API çağrısı yapmaz.
 
-const GEMINI_API_KEY = 'AIzaSyBYRNmXlu3O6aojEAhljPjjQCFwD6e0WaY';
+const GEMINI_API_KEY = 'AIzaSyCRpKU2BRe8iNeVmCVKQJkjKNpgRlJQExI';
 
 // --- CACHE SİSTEMİ (localStorage, 30 gün) ---
 const CACHE_PREFIX = 'izlenti_gemini_';
