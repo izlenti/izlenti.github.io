@@ -81,8 +81,8 @@ Aşağıdaki JSON formatında cevap ver. SADECE JSON döndür, başka hiçbir ş
 // --- GEMİNİ API ÇAĞRISI (RETRY + BACKOFF) ---
 const MODELS = [
     'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite'
 ];
 
 const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
@@ -104,10 +104,11 @@ const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
         })
     });
 
-    // Rate limit — retry with backoff
+    // Rate limit — retry with longer backoff
     if (response.status === 429) {
         if (attempt < 3) {
-            const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+            const delays = [5000, 15000, 30000]; // 5s, 15s, 30s
+            const delay = delays[attempt];
             console.warn(`[İzlenti AI] Rate limit (429), ${delay / 1000}s sonra tekrar denenecek... (deneme ${attempt + 1}/3, model: ${model})`);
             await new Promise(r => setTimeout(r, delay));
             return callGeminiAPI(prompt, modelIndex, attempt + 1);
@@ -115,6 +116,7 @@ const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
         // 3 deneme de başarısız olduysa sonraki modeli dene
         if (modelIndex < MODELS.length - 1) {
             console.warn(`[İzlenti AI] ${model} ile 3 deneme başarısız, ${MODELS[modelIndex + 1]} deneniyor...`);
+            await new Promise(r => setTimeout(r, 5000)); // Model değişiminde de 5s bekle
             return callGeminiAPI(prompt, modelIndex + 1, 0);
         }
         throw new Error('Rate limit aşıldı, tüm modeller denendi');
@@ -123,9 +125,9 @@ const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
     if (!response.ok) {
         const errText = await response.text();
         console.error(`[İzlenti AI] API hatası (${model}): ${response.status}`, errText);
-        // Başka model dene
+        // 404 veya başka hata — sonraki modeli dene
         if (modelIndex < MODELS.length - 1) {
-            console.warn(`[İzlenti AI] ${model} başarısız, ${MODELS[modelIndex + 1]} deneniyor...`);
+            console.warn(`[İzlenti AI] ${model} başarısız (${response.status}), ${MODELS[modelIndex + 1]} deneniyor...`);
             return callGeminiAPI(prompt, modelIndex + 1, 0);
         }
         throw new Error(`API ${response.status}`);
