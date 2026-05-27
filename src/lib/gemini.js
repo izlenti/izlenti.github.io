@@ -3,7 +3,6 @@
 // Cache mekanizması ile aynı film için tekrar API çağrısı yapmaz.
 
 const GEMINI_API_KEY = 'AIzaSyBYRNmXlu3O6aojEAhljPjjQCFwD6e0WaY';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // --- CACHE SİSTEMİ (localStorage, 30 gün) ---
 const CACHE_PREFIX = 'izlenti_gemini_';
@@ -79,7 +78,62 @@ Aşağıdaki JSON formatında cevap ver. SADECE JSON döndür, başka hiçbir ş
 }`;
 };
 
-// --- GEMİNİ API ÇAĞRISI ---
+// --- GEMİNİ API ÇAĞRISI (RETRY + BACKOFF) ---
+const MODELS = [
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash'
+];
+
+const callGeminiAPI = async (prompt, modelIndex = 0, attempt = 0) => {
+    const model = MODELS[modelIndex] || MODELS[0];
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.9,
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 2048,
+                responseMimeType: "application/json"
+            }
+        })
+    });
+
+    // Rate limit — retry with backoff
+    if (response.status === 429) {
+        if (attempt < 3) {
+            const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+            console.warn(`[İzlenti AI] Rate limit (429), ${delay / 1000}s sonra tekrar denenecek... (deneme ${attempt + 1}/3, model: ${model})`);
+            await new Promise(r => setTimeout(r, delay));
+            return callGeminiAPI(prompt, modelIndex, attempt + 1);
+        }
+        // 3 deneme de başarısız olduysa sonraki modeli dene
+        if (modelIndex < MODELS.length - 1) {
+            console.warn(`[İzlenti AI] ${model} ile 3 deneme başarısız, ${MODELS[modelIndex + 1]} deneniyor...`);
+            return callGeminiAPI(prompt, modelIndex + 1, 0);
+        }
+        throw new Error('Rate limit aşıldı, tüm modeller denendi');
+    }
+
+    if (!response.ok) {
+        const errText = await response.text();
+        console.error(`[İzlenti AI] API hatası (${model}): ${response.status}`, errText);
+        // Başka model dene
+        if (modelIndex < MODELS.length - 1) {
+            console.warn(`[İzlenti AI] ${model} başarısız, ${MODELS[modelIndex + 1]} deneniyor...`);
+            return callGeminiAPI(prompt, modelIndex + 1, 0);
+        }
+        throw new Error(`API ${response.status}`);
+    }
+
+    return response.json();
+};
+
 export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
     const id = movieDetails.id;
     
@@ -109,28 +163,7 @@ export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
     try {
         console.log(`[İzlenti AI] Gemini API çağrısı yapılıyor: ${title} (${year})`);
         
-        const response = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.9,
-                    topP: 0.95,
-                    topK: 40,
-                    maxOutputTokens: 2048,
-                    responseMimeType: "application/json"
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            console.error(`[İzlenti AI] Gemini API hatası: ${response.status}`, errText);
-            return { success: false, error: `API ${response.status}` };
-        }
-
-        const result = await response.json();
+        const result = await callGeminiAPI(prompt);
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text) {
@@ -141,7 +174,6 @@ export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
         // JSON parse et
         let parsed;
         try {
-            // Gemini bazen ```json ... ``` wrapper'ı ekleyebilir, temizle
             const cleanText = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
             parsed = JSON.parse(cleanText);
         } catch (parseErr) {
