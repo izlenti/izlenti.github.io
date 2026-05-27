@@ -346,7 +346,7 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                         {(() => {
                                             const vs = getGeminiVerdictStyle(geminiReview.verdict);
                                             const wr = getWatchRecStyle(geminiReview.watchRecommendation);
-                                            const avatar = getGeminiCriticAvatar(geminiReview.verdict);
+                                            const avatar = getGeminiCriticAvatar(geminiReview.verdict, geminiReview.score);
                                             return (
                                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#0b0f19]/80 border border-white/10 rounded-2xl p-4 md:p-5">
                                                     {/* Critic Portrait & Info */}
@@ -359,30 +359,30 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Eleştirmen Tepkisi</span>
-                                                            <h5 className="text-white font-black text-xs md:text-sm tracking-wide mt-0.5">{avatar.title}</h5>
-                                                            <span className="text-[10px] text-slate-400 block mt-0.5">{avatar.desc}</span>
+                                                            <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider block">Eleştirmen Tepkisi</span>
+                                                            <h5 className="text-white font-black text-sm md:text-base tracking-wide mt-0.5">{avatar.title}</h5>
+                                                            <span className="text-[11px] md:text-xs font-semibold text-slate-300 block mt-0.5">{avatar.desc}</span>
                                                         </div>
                                                     </div>
 
                                                     {/* Verdict and Score */}
                                                     <div className="flex flex-wrap items-center gap-4 w-full md:w-auto border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
                                                         <div>
-                                                            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">AI Kararı</span>
-                                                            <span className={`inline-flex items-center gap-1.5 bg-gradient-to-r ${vs.gradient} px-2.5 py-1 rounded-lg text-white font-black text-[11px] md:text-xs shadow-lg mt-1`}>
+                                                            <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider block">AI Kararı</span>
+                                                            <span className={`inline-flex items-center gap-1.5 bg-gradient-to-r ${vs.gradient} px-3 py-1.5 rounded-lg text-white font-black text-xs md:text-sm shadow-lg mt-1`}>
                                                                 {vs.icon} {geminiReview.verdict}
                                                             </span>
                                                         </div>
                                                         
                                                         {geminiReview.score && (
                                                             <div className="text-center px-2">
-                                                                <span className="text-[8px] text-slate-500 font-bold uppercase block">AI Puan</span>
-                                                                <span className={`text-xl font-black ${vs.color}`}>{geminiReview.score}</span>
-                                                                <span className="text-slate-600 text-[10px]">/10</span>
+                                                                <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase block">AI Puan</span>
+                                                                <span className={`text-2xl font-black ${vs.color}`}>{geminiReview.score}</span>
+                                                                <span className="text-slate-500 text-xs">/10</span>
                                                             </div>
                                                         )}
 
-                                                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-[10px] md:text-xs ${wr.bg} ${wr.color}`}>
+                                                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-bold text-xs md:text-sm ${wr.bg} ${wr.color}`}>
                                                             <span className="text-sm">{wr.icon}</span>
                                                             {wr.label}
                                                         </div>

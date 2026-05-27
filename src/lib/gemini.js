@@ -262,76 +262,76 @@ export const getWatchRecStyle = (rec) => {
 };
 
 // --- ELEŞTİRMEN AVATARI VE İFADE EŞLEŞTİRİSİ ---
-export const getGeminiCriticAvatar = (verdict) => {
+// Kullanıcının talebi doğrultusunda 3 ana kategoriye indirilmiş basitleştirilmiş ve kararlı emoji-avatar motoru:
+// 1. BEĞENDİ (Başyapıt, Çok İyi, İyi) -> liked_*
+// 2. ORTALAMA (Ortalama, Vasat) -> average_*
+// 3. BEĞENMEDİ (Kötü, Felaket) -> disliked_*
+export const getGeminiCriticAvatar = (verdict, score = 7.0) => {
     const v = (verdict || '').toLowerCase();
-    if (v.includes('başyapıt')) {
+    
+    // --- 1. BEĞENDİ GRUBU ---
+    if (v.includes('başyapıt') || v.includes('çok iyi') || v.includes('iyi')) {
+        let avatarFile = 'critic/liked_clapper.png';
+        let title = 'SİNEMA YAZARI';
+        
+        if (v.includes('başyapıt')) {
+            avatarFile = 'critic/liked_oscar.png';
+            title = 'SİNEMA DUAYENİ';
+        } else if (v.includes('çok iyi')) {
+            avatarFile = 'critic/liked_heart.png';
+            title = 'SEÇKİN ELEŞTİRMEN';
+        } else {
+            // "İyi" için çeşitlilik (puan veya seed ile)
+            if (score >= 7.2) {
+                avatarFile = 'critic/liked_tea.png';
+            } else {
+                avatarFile = 'critic/liked_popcorn.png';
+            }
+        }
+        
         return {
-            url: 'critic/liked_oscar.png',
-            title: 'SİNEMA DUAYENİ',
-            color: 'border-amber-500/30',
-            bg: 'bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]',
-            desc: 'Ayakta alkışlıyor!'
-        };
-    }
-    if (v.includes('çok iyi')) {
-        return {
-            url: 'critic/liked_heart.png',
-            title: 'SEÇKİN ELEŞTİRMEN',
+            url: avatarFile,
+            title: title,
             color: 'border-emerald-500/30',
             bg: 'bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]',
-            desc: 'Şapka çıkarıyor.'
+            desc: 'Yapımı Beğendi'
         };
     }
-    if (v.includes('iyi') && !v.includes('çok')) {
+    
+    // --- 2. ORTALAMA GRUBU ---
+    if (v.includes('ortalama') || v.includes('vasat')) {
         return {
-            url: 'critic/liked_thumbsup.png',
-            title: 'SİNEMA YAZARI',
-            color: 'border-cyan-500/30',
-            bg: 'bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)]',
-            desc: 'Tebessümle öneriyor.'
-        };
-    }
-    if (v.includes('ortalama')) {
-        return {
-            url: 'critic/liked_popcorn.png',
-            title: 'SİNEMA AKADEMİSYENİ',
+            url: 'critic/average_clapper.png',
+            title: 'SİNEMA ELEŞTİRMENİ',
             color: 'border-blue-500/20',
             bg: 'bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]',
-            desc: 'Kararsız ama izlenebilir buldu.'
+            desc: 'Yapımı Ortalama Buldu'
         };
     }
-    if (v.includes('vasat')) {
-        return {
-            url: 'critic/disliked_bored.png',
-            title: 'SİNEMA GÖZLEMCİSİ',
-            color: 'border-orange-500/20',
-            bg: 'bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)]',
-            desc: 'Sıkıntıdan esniyor.'
-        };
-    }
-    if (v.includes('kötü')) {
-        return {
-            url: 'critic/disliked_thumbsdown.png',
-            title: 'ACI ELEŞTİRMEN',
-            color: 'border-red-500/25',
-            bg: 'bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
-            desc: 'Acı çekerek thumbs down veriyor!'
-        };
-    }
+    
+    // --- 3. BEĞENMEDİ GRUBU (Kötü, Felaket) ---
+    let avatarFile = 'critic/disliked_clapper.png';
+    let title = 'SİNEMA YAZARI';
+    
     if (v.includes('felaket')) {
-        return {
-            url: 'critic/disliked_brokenheart.png',
-            title: 'ACIMASIZ SİNEFİL',
-            color: 'border-red-700/30',
-            bg: 'bg-red-950/20 shadow-[0_0_15px_rgba(185,28,28,0.2)]',
-            desc: 'Öfkeden salonu terk ediyor!'
-        };
+        avatarFile = 'critic/disliked_brokenheart.png';
+        title = 'ACIMASIZ SİNEFİL';
+    } else if (score < 4.0) {
+        avatarFile = 'critic/disliked_thumbsdown.png';
+        title = 'ACI ELEŞTİRMEN';
+    } else {
+        if (score >= 4.5) {
+            avatarFile = 'critic/disliked_facepalm.png';
+        } else {
+            avatarFile = 'critic/disliked_bored.png';
+        }
     }
+    
     return {
-        url: 'critic/liked_clapper.png',
-        title: 'SİNEMA YAZARI',
-        color: 'border-cyan-500/30',
-        bg: 'bg-cyan-500/10',
-        desc: 'Merakla inceliyor.'
+        url: avatarFile,
+        title: title,
+        color: 'border-red-500/25',
+        bg: 'bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
+        desc: 'Yapımı Beğenmedi'
     };
 };
