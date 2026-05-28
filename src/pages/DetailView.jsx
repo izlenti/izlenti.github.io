@@ -664,6 +664,18 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                         </div>
                     </div>
                 )}
+                
+                {/* TMDB & Play Store Yasal Uyum Bilgilendirme Footer'ı */}
+                <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-slate-500 text-xs relative z-10">
+                    <p className="max-w-md leading-relaxed">
+                        Bu uygulama veri, görsel ve fragman sağlayıcı altyapısı olarak <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:text-cyan-400 hover:underline">The Movie Database (TMDB)</a> API'sini kullanmaktadır. TMDB tarafından resmi olarak onaylanmamış veya desteklenmemiştir.
+                    </p>
+                    <div className="flex gap-4">
+                        <a href={`${import.meta.env.BASE_URL || '/'}privacy.html`} target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition hover:underline">Gizlilik Politikası</a>
+                        <span>•</span>
+                        <a href="mailto:destek@izlenti.com" className="hover:text-slate-300 transition hover:underline">Destek</a>
+                    </div>
+                </div>
             </div>
 
             {/* TRAILER MODAL — createPortal ile body'e render edilir, scroll sorununu önler */}
