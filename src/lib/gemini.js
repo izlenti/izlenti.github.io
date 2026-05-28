@@ -253,6 +253,17 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
         ];
     }
 
+    // --- GERÇEK WIKIPEDIA VERİLERİNİ PARAGRAFLARA ENTEGRE ETME ---
+    let transitionSent = "";
+    if (hasRealData && wikiResearchText) {
+        const cleanWikiText = wikiResearchText.replace(/"/g, "'");
+        transitionSent = ` Küresel internet analizleri ve izleyici verileri de bu durumu destekler nitelikte; ${cleanWikiText}`;
+    }
+
+    if (transitionSent) {
+        p3Options = p3Options.map(opt => opt + transitionSent);
+    }
+
     const p1Idx = Math.floor(seed * 10) % p1Options.length;
     const p2Idx = Math.floor(seed * 100) % p2Options.length;
     const p3Idx = Math.floor(seed * 1000) % p3Options.length;
