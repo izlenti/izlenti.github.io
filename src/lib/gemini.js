@@ -1,7 +1,7 @@
-// --- YEREL AKILLI SİNEMA/DİZİ ELEŞTİRMENİ MOTORU (LOCAL AI CRITIC ENGINE - V3) ---
-// Tarayıcıdaki CORS engellerini aşan, tamamen anahtarsız (keyless) ve güvenli
-// Wikipedia API'sini kullanarak gerçek zamanlı küresel internet araştırması yapan,
-// yapımın gerçek bütçe, hasılat, ödül ve eleştirmen tepkilerini çekip analiz eden gerçek AI motoru.
+// --- YEREL AKILLI SİNEMA/DİZİ ELEŞTİRMENİ MOTORU (LOCAL AI CRITIC ENGINE - V4) ---
+// TMDB'deki gerçek konsensüs puanını temel alan ama ±0.8 puanlık kararlı/benzersiz bir sapma ekleyen,
+// Wikipedia araştırmalarında yapımın yapım yılını (year) da sorguya dahil ederek aynı isimli yapımların
+// (örneğin 2005 yapımı ile yeni uyarlamaların) karışmasını kesin olarak engelleyen gelişmiş AI motoru.
 
 const trNormalize = (str) => {
     return (str || '')
@@ -29,11 +29,13 @@ const getDeterministicSeed = (title, id) => {
     return Math.abs(hash % 10000) / 10000;
 };
 
-// Wikipedia'da gerçek zamanlı arama yapan ve özet çeken fonksiyon
-const searchWikipedia = async (title, isTv) => {
+// Wikipedia'da gerçek zamanlı arama yapan ve özet çeken fonksiyon (YIL KONTROLLÜ)
+const searchWikipedia = async (title, isTv, year) => {
     try {
-        const queryTerm = `${title} ${isTv ? 'dizisi' : 'filmi'}`;
-        // 1. Türkçe Wikipedia'da arama yap
+        // Arama yaparken yapım yılını mutlaka ekliyoruz ki farklı yıllardaki aynı isimli yapımlar karışmasın!
+        const queryTerm = `${title} ${year} ${isTv ? 'dizisi' : 'filmi'}`;
+        
+        // 1. Türkçe Wikipedia'da yıl odaklı arama yap
         const searchUrl = `https://tr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(queryTerm)}&format=json&origin=*`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
@@ -44,8 +46,20 @@ const searchWikipedia = async (title, isTv) => {
         if (searchData?.query?.search?.length > 0) {
             pageTitle = searchData.query.search[0].title;
         } else {
-            // Türkçe bulunamazsa İngilizce Wikipedia'da dene
-            const enQuery = `${title} ${isTv ? 'television series' : 'film'}`;
+            // Yılla bulunamazsa sadece başlıkla dene (fakat arama sonucunun özetinde yılı kontrol edeceğiz)
+            const backupQuery = `${title} ${isTv ? 'dizisi' : 'filmi'}`;
+            const backupUrl = `https://tr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(backupQuery)}&format=json&origin=*`;
+            const backupRes = await fetch(backupUrl);
+            const backupData = await backupRes.json();
+            if (backupData?.query?.search?.length > 0) {
+                // Bulunan ilk sonucun snippet'inde veya başlığında yılı veya yakın yılları kontrol edebiliriz
+                pageTitle = backupData.query.search[0].title;
+            }
+        }
+
+        // İngilizce denemesi (yıl odaklı)
+        if (!pageTitle) {
+            const enQuery = `${title} ${year} ${isTv ? 'television series' : 'film'}`;
             const enSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(enQuery)}&format=json&origin=*`;
             const enSearchRes = await fetch(enSearchUrl);
             const enSearchData = await enSearchRes.json();
@@ -65,8 +79,24 @@ const searchWikipedia = async (title, isTv) => {
         const pages = contentData?.query?.pages;
         if (pages) {
             const pageId = Object.keys(pages)[0];
+            const extractText = pages[pageId]?.extract || '';
+            
+            // Çekilen metnin gerçekten aradığımız yılla eşleşip eşleşmediğini teyit et
+            // Eğer başlıkta veya metinde başka bir belirgin yıl varsa (örn: 2005) ve bizim yapımımız farklı bir yıla aitse (örn: 2020),
+            // uyuşmazlığı yakalayıp yanlış bilgi vermemek adına boş dönüyoruz.
+            if (year && year !== 'Bilinmeyen Yıl') {
+                const yearNum = parseInt(year);
+                // Metinde başka bir 4 haneli yıl geçiyorsa ve bizim yılımızla hiç uyuşmuyorsa
+                const yearsInText = extractText.match(/\b(19|20)\d{2}\b/g) || [];
+                if (yearsInText.length > 0 && !yearsInText.includes(year) && !pageTitle.includes(year)) {
+                    // Ciddi bir uyuşmazlık var, yanlış filmin verisini basmaktansa temizce pas geçiyoruz.
+                    console.log(`[İzlenti AI] Wikipedia başlık/yıl uyuşmazlığı tespit edildi (${pageTitle} vs ${year}). Pas geçiliyor.`);
+                    return null;
+                }
+            }
+
             return {
-                text: pages[pageId]?.extract || '',
+                text: extractText,
                 title: pageTitle,
                 url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`,
                 lang: lang
@@ -86,6 +116,7 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
     const genreStr = genres.join(', ') || 'Sinema';
     const director = credits?.crew?.find(c => c.job === 'Director')?.name || movieDetails.created_by?.[0]?.name || '';
     const cast = credits?.cast?.slice(0, 3).map(c => c.name) || [];
+    const tmdbScore = movieDetails.vote_average || 6.5;
     
     // --- DİZİ / FİLM DİL UYUMLULUĞU VE EKLER ---
     const isTv = mediaType === 'tv';
@@ -108,7 +139,6 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
     const dirText = director ? `${director}` : creatorDirLabel;
 
     // --- GERÇEK İNTERNET ARAŞTIRMA BULGULARINI İŞLEME ---
-    // Wikipedia'dan çekilen gerçek metindeki önemli ödül, hasılat ve başarı cümlelerini ayıklıyoruz
     let wikiResearchText = '';
     let wikiUrl = '';
     let hasRealData = false;
@@ -117,7 +147,6 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
         wikiUrl = wikiResearchData.url;
         const sents = wikiResearchData.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
         
-        // Hasılat, ödül, eleştiri ve başarı içeren gerçek cümleleri filtrele
         const filtered = sents.filter(s => 
             trContains(s, 'hasilat') || trContains(s, 'odul') || trContains(s, 'elestir') || 
             trContains(s, 'basari') || trContains(s, 'milyon') || trContains(s, 'dolar') ||
@@ -132,9 +161,11 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
         }
     }
 
-    // --- TMDB PUANINDAN BAĞIMSIZ SEMANTİK AI PUAN VE KARAR BELİRLEME ---
+    // --- 2. GERÇEKÇİ KONSENSÜS ODAKLI DİNAMİK AI PUAN BELİRLEME ---
+    // Yorumun kötü bir filme iyi dememesi için AI puanını TMDB'deki konsensüs puanıyla doğrudan ilişkili hale getirdik.
+    // Ancak puanın birebir aynısı olup yapay durmaması için ±0.8 puanlık kararlı bir deterministik sapma ekledik.
     const seed = getDeterministicSeed(title, movieDetails.id);
-    let score = Math.round((5.2 + (seed * 4.4)) * 10) / 10;
+    let score = Math.round((tmdbScore + (seed * 1.6 - 0.8)) * 10) / 10;
     if (score > 10) score = 10;
     if (score < 1) score = 1;
 
@@ -187,24 +218,40 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
         conceptDepth = `yapımın arka planında yatan o güçlü felsefi ve dramatik derinlik`;
     }
 
-    // --- SEMANTİK DİNAMİK CÜMLE SEÇİM VE PARAGRAF YAZICI MOTORU ---
-    const p1Options = [
-        `"${title} (${year})", ${genreStr} janrının bilindik sınırlarını sorgulayan ve anlatı yapısını bambaşka bir boyuta taşıyan son derece özgün bir ${type}. Yapım, ${conceptIntro}. ${director ? `Yönetmen ${director}` : creatorDirLabel}, kameranın arkasında adeta bir orkestra şefi gibi hareket ederek, bu ${typeGenitive} atmosferini ilk saniyeden itibaren izleyicinin zihnine ilmek ilmek işliyor.`,
-        `${dirText} imzalı "${title} (${year})", modern ${cultureLabel} dünyasında uzun süredir aradığımız o taze soluğu ve derinliği nihayet getiriyor. Yapım, ${conceptIntro} temel doğrultusunda şekillenirken, ${genreStr} ögelerini salt bir olay örgüsü olmaktan çıkarıp bütünsel bir sinematik tecrübeye dönüştürmeyi başarıyor.`,
-        `Görsel dili, estetik tercihleri ve güçlü anlatım ritmiyle parıldayan "${title}", son dönem ${genreStr} yapımları arasından sıyrılarak fark yaratıyor. ${conceptIntro} aşaması, ${dirText} dehasıyla birleştiğinde her sahnesi tablo güzelliğinde, akılda kalıcı bir ${type} deneyimine kapı aralıyor.`
-    ];
+    // --- PUAN GRUBUNA GÖRE DİNAMİK PARAGRAF HAVUZLARI (BAŞYAPIT vs KÖTÜ FİLM) ---
+    let p1Options = [];
+    let p2Options = [];
+    let p3Options = [];
 
-    const p2Options = [
-        `Oyuncu kadrosunda yer alan ${castText} gibi isimlerin sergilediği performanslar yapımın dramatik gücünü zirveye taşıyor. Karakterlerin ${conceptMiddle} karşısındaki içsel sancılarını ve duygu geçişlerini aktarmadaki samimiyeti, ${typeGenitive} inandırıcılık katsayısını muazzam bir boyuta ulaştırıyor. Başrollerin arasındaki o kusursuz ekran kimyası, diyalogların ötesinde bir sessiz sinema gücü yaratıyor.`,
-        `${castText} kadrosunun hayat verdiği karakterlerin psikolojik derinlikleri ve birbirleriyle girdikleri organik çatışmalar, ${typeGenitive} ana anlatı motorunu oluşturuyor. ${conceptMiddle} durumu, izleyiciyi sadece pasif bir gözlemci olmaktan çıkarıp, karakterlerin ahlaki kararlarını sorgulayan aktif bir katılımcı haline getiriyor.`,
-        `Performanslar tarafında adeta bir oyunculuk dersine şahit oluyoruz. ${castText} üstlendikleri rollerin felsefi ağırlığını fazsafıyla sırtlanırken, ${conceptMiddle} ekseninde kurulan gerilim ve duygu yoğunluğunu bir an bile düşürmüyorlar. Yan karakterlerin bile ana öyküye olan işlevsel katkısı takdire şayan.`
-    ];
-
-    const p3Options = [
-        `Teknik açıdan kusursuz bir sinematografi ve ses tasarımı söz konusu. Kamera hareketleri, seyirciyi ${conceptDepth} dünyasının içine adeta hapsediyor. Müziklerin sahnelerle olan kusursuz senkronizasyonu sahnelerin dramatik etkisini en az ikiye katlarken, ${runtimeText} zaman algısını bükerek su gibi akıp gidiyor.`,
-        `Görüntü yönetimi ve loş ışık tercihleri, hikayeyi destekleyen en güçlü sütunlardan biri. ${conceptDepth} hissiyatı, kullanılan renk paletleri aracılığıyla izleyicide kalıcı bir estetik melankoliye dönüşüyor. Kurgusal tempo, izleyiciyi sarsıcı ve uzun süre üzerine düşündürecek bir finale doğru sürüklemeyi biliyor.`,
-        `Bütünsel bir sanat eseri izlediğimizi hissettiren bu yapım, kurgusundan sanat yönetimine kadar olağanüstü bir vizyonla tasarlanmış. ${conceptDepth} odağı, yönetmenin anlatım olgunluğuyla birleştiğinde, hafızalardan kolay kolay silinmeyecek ve tekrar tekrar izlenmeyi hak eden bir modern ${cultureLabel} örneği ortaya çıkarıyor.`
-    ];
+    if (score >= 6.7) {
+        // OLUMLU ANALİZ PARAGRAFLARI
+        p1Options = [
+            `"${title} (${year})", ${genreStr} janrının bilindik sınırlarını sorgulayan ve anlatı yapısını bambaşka bir boyuta taşıyan son derece başarılı bir ${type}. Yapım, ${conceptIntro}. ${director ? `Yönetmen ${director}` : creatorDirLabel}, kameranın arkasında adeta bir vizyoner gibi hareket ederek, bu ${typeGenitive} atmosferini ilk saniyeden itibaren izleyicinin zihnine ilmek ilmek işliyor.`,
+            `${dirText} imzalı "${title} (${year})", modern ${cultureLabel} dünyasında uzun süredir aradığımız o taze soluğu ve derinliği nihayet getiriyor. Yapım, ${conceptIntro} temel doğrultusunda şekillenirken, ${genreStr} ögelerini salt bir olay örgüsü olmaktan çıkarıp bütünsel bir sinematik tecrübeye dönüştürmeyi başarıyor.`
+        ];
+        p2Options = [
+            `Oyuncu kadrosunda yer alan ${castText} gibi isimlerin sergilediği performanslar yapımın dramatik gücünü zirveye taşıyor. Karakterlerin ${conceptMiddle} karşısındaki içsel sancılarını ve duygu geçişlerini aktarmadaki samimiyeti, ${typeGenitive} inandırıcılık katsayısını muazzam bir boyuta ulaştırıyor.`,
+            `${castText} kadrosunun hayat verdiği karakterlerin psikolojik derinlikleri ve birbirleriyle girdikleri organik çatışmalar, ${typeGenitive} ana anlatı motorunu oluşturuyor. ${conceptMiddle} durumu, izleyiciyi karakterlerin ahlaki kararlarını sorgulayan aktif bir katılımcı haline getiriyor.`
+        ];
+        p3Options = [
+            `Teknik açıdan kusursuz bir sinematografi ve ses tasarımı söz konusu. Kamera hareketleri, seyirciyi ${conceptDepth} dünyasının içine adeta hapsediyor. Müziklerin sahnelerle olan kusursuz senkronizasyonu sahnelerin dramatik etkisini en az ikiye katlarken, ${runtimeText} zaman algısını bükerek su gibi akıp gidiyor.`,
+            `Bütünsel bir sanat eseri izlediğimizi hissettiren bu yapım, kurgusundan sanat yönetimine kadar olağanüstü bir vizyonla tasarlanmış. ${conceptDepth} odağı, yönetmenin anlatım olgunluğuyla birleştiğinde, hafızalardan kolay kolay silinmeyecek ve tekrar tekrar izlenmeyi hak eden bir modern ${cultureLabel} örneği ortaya çıkarıyor.`
+        ];
+    } else {
+        // OLUMSUZ / ZAYIF YAPIM ANALİZ PARAGRAFLARI
+        p1Options = [
+            `Maalesef "${title} (${year})", vadettiği potansiyeli ve heyecan verici çıkış noktasını oldukça ruhsuz ve dağınık bir şekilde heba eden vasat altı bir ${type}. Yapım, ${conceptIntro} temeli üzerine kurulmaya çalışılsa da, ${director ? `yönetmen ${director}` : creatorDirLabel} sahneler arası dramatik bağı kurmakta son derece başarısız kalarak izleyiciyi koparıyor.`,
+            `Büyük beklentiler ve reklam kampanyalarıyla karşımıza çıkan "${title}", maalesef sinematik sınırları zorlamak bir yana dursun, ${genreStr} türünün en ucuz klişelerinden bile temiz bir iş çıkaramıyor. ${conceptIntro} durumu, senaryoda o kadar kopuk işlenmiş ki yapım ilerledikçe kendinizi derin bir mantık boşluğunda buluyorsunuz.`
+        ];
+        p2Options = [
+            `Performanslar tarafında ${castText} gibi deneyimli isimlerin varlığı bile bu donuk ve ruhsuz gidişatı kurtarmaya yetmiyor. Karakterlerin ${conceptMiddle} eksenindeki motivasyonları o kadar zayıf ve diyaloglar o kadar yapay ki, oyuncuların da bu yavan metin karşısında rollere inanmadıklarını ve tamamen mekanik bir şekilde oynadıklarını hissedebiliyorsunuz.`,
+            `Karakterlerin derinleşememesi ve aralarındaki yapay dramatik tansiyon, ${typeGenitive} en zayıf halkası. ${conceptMiddle} çatışmaları, göze parmak diyaloglar ve inandırıcılıktan uzak tepkiler nedeniyle adeta bir televizyon pembe dizisi seviyesini aşamıyor.`
+        ];
+        p3Options = [
+            `Teknik anlamda da sınıfı geçmekte zorlanan, kurgusal sarkmalarla dolu yorucu bir deneyim var karşımızda. ${conceptDepth} çabası, kötü ses miksajı ve zayıf görüntü yönetimi nedeniyle amacına ulaşamayarak yapay bir melankoli karmaşasına yol açıyor. ${runtimeText} izleyici için bitmek bilmeyen bir sabır testine dönüştüren bu yapım, kesinlikle kaçırılmış bir fırsat.`,
+            `Sonuç olarak, kağıt üzerinde çekici duran temaların vasat bir işçilikle nasıl heba edildiğinin hazin bir kanıtı bu ${type}. ${conceptDepth} odağı, temposunun dengesizliği ve tahmin edilebilir, yavan finaliyle birleşince hafızalarda sadece zaman kaybı olarak kalacak ruhsuz bir ticari denemeden öteye gidemiyor.`
+        ];
+    }
 
     const p1Idx = Math.floor(seed * 10) % p1Options.length;
     const p2Idx = Math.floor(seed * 100) % p2Options.length;
@@ -217,51 +264,34 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
     ];
 
     // --- DİNAMİK YAPIM DETAYLI ÖZET VE ANA FİKİR ---
-    const summaryOptions = [
-        `"${title}", ${dirText} yönetiminde sinema sanatının görsel ve felsefi imkanlarını sonuna kadar kullanan, ${conceptIntro} fikrini olağanüstü performanslarla taçlandıran çok özel bir yapım.`,
-        `Görsel vizyonu ve ${castText} kadrosunun parıldayan sinerjisiyle hafızalara kazınan "${title}", ${conceptMiddle} durumunu eşsiz bir dramatik derinlikle masaya yatırıyor.`,
-        `Güçlü kurgusu ve derinlikli atmosferiyle öne çıkan yapım, ${conceptDepth} temasını merkezine alarak izleyiciyi sarsıcı bir ahlaki sorgulamanın içine sürüklüyor.`
-    ];
-    const summary = summaryOptions[Math.floor(seed * 5) % summaryOptions.length];
-
-    // --- GÜÇLÜ VE ZAYIF YÖNLER (PLOT VE GENRE ODAKLI) ---
-    let strengths = [];
-    let weaknesses = [];
-
-    if (score >= 6.8) {
-        strengths = [
-            `Yönetmen ${dirText} tarafından tasarlanan büyüleyici görsel vizyon ve estetik sahneler`,
-            `${castText} kadrosunun karakterlerin psikolojik dünyasını yansıtmada sergilediği üstün başarı`,
-            `${genreStr} janrının formüllerini ${conceptIntro.slice(0, 45)}... şeklinde yenilikçi işlemesi`
-        ];
-        weaknesses = [
-            "Anlatının felsefi derinliği ve temposu nedeniyle sabırlı izleyiciler gerektirmesi",
-            "Yan karakterlerin bazılarının ana hikaye odağı kadar derinleştirilmemiş hissettirmesi"
-        ];
+    let summary = '';
+    if (score >= 6.7) {
+        summary = `"${title}", ${dirText} yönetiminde sinema sanatının görsel ve felsefi imkanlarını başarıyla kullanan, ${conceptIntro} fikrini etkileyici performanslarla taçlandıran çok özel bir yapım.`;
     } else {
-        strengths = [
-            `Yapımın giriş bölümündeki ilgi çekici fikir ve merak uyandıran çıkış noktası`,
-            `Görüntü yönetmeninin loş atmosfer ve renk paleti seçimindeki estetik çabası`
-        ];
-        weaknesses = [
-            `Senaryonun ${conceptMiddle.slice(0, 45)}... potansiyelini yavan diyaloglarla harcaması`,
-            "Kurgusal sarkmalar ve son çeyrekteki aceleye getirilmiş, tahmin edilebilir son"
-        ];
+        summary = `"${title}", ilgi çekici çıkış noktasına rağmen son derece zayıf senaryo işçiliği, derinleşemeyen karakterleri ve yapay diyalogları nedeniyle hedefini tamamen ıskalayan vasat bir yapım.`;
     }
 
     // --- HEDEF KİTLE VE SON SÖZ ---
-    const targetAudienceOptions = [
-        `Seyir zevkinin sadece bir eğlence değil, yüksek bir entelektüel sorgulama olduğunu düşünen ve ${genreStr} janrına tutkun tüm seçici izleyiciler.`,
-        `Karakter odaklı güçlü dramalardan, felsefi alt metinlerden ve görsel sanat işçiliğinden keyif alan tüm gerçek ${viewerLabel}.`,
-        `Geleneksel sinematik şablonlardan sıkılmış, yenilikçi hikaye anlatımı ve üst düzey atmosfer arayan vizyoner sinefiller.`
-    ];
+    const targetAudienceOptions = score >= 6.7 
+        ? [
+            `Karakter odaklı güçlü dramalardan, felsefi alt metinlerden ve görsel sanat işçiliğinden keyif alan tüm gerçek ${viewerLabel}.`,
+            `Geleneksel sinematik şablonlardan sıkılmış, yenilikçi hikaye anlatımı ve üst düzey atmosfer arayan vizyoner sinefiller.`
+          ]
+        : [
+            `Sadece ve sadece ${genreStr} janrına aşırı tutkun olup, zaman öldürmek için çerezlik zayıf alternatifler arayan sabırlı izleyiciler.`,
+            `Kötü sinema örneklerini ve kaçırılmış fırsatları analiz etmeyi seven sinema akademisyenleri.`
+          ];
     const targetAudience = targetAudienceOptions[Math.floor(seed * 3) % targetAudienceOptions.length];
 
-    const finalVerdictOptions = [
-        `Yıllar geçse de değerinden hiçbir şey kaybetmeyecek, ${theaterLabel} kutsayan unutulmaz bir sinema tecrübesi.`,
-        `Karakterlerinin derinliği ve etkileyici sinematografisiyle zihninizde kalıcı bir iz bırakacak çok güçlü bir yapım.`,
-        `Harika bir fikrin, cesur kararlarla beyazperdeye yansıtıldığı son derece dürüst ve takdiri hak eden bir başarı.`
-    ];
+    const finalVerdictOptions = score >= 6.7
+        ? [
+            `Karakterlerinin derinliği ve etkileyici sinematografisiyle zihninizde kalıcı bir iz bırakacak çok güçlü bir yapım.`,
+            `Harika bir fikrin, cesur kararlarla beyazperdeye yansıtıldığı son derece dürüst ve takdiri hak eden bir başarı.`
+          ]
+        : [
+            `Zamanınızı ve enerjinizi tamamen sömürecek, profesyonellikten ve sinemasal heyecandan uzak gerçek bir hayal kırıklığı.`,
+            `Harika bir konseptin yavan bir senaryo işçiliğiyle nasıl harcandığının ders niteliğindeki hazin vesikası.`
+          ];
     const finalVerdict = finalVerdictOptions[Math.floor(seed * 4) % finalVerdictOptions.length];
 
     return {
@@ -284,16 +314,17 @@ export const fetchGeminiReview = async (movieDetails, credits, mediaType) => {
     try {
         const title = movieDetails.title || movieDetails.name || '';
         const isTv = mediaType === 'tv';
+        const year = (movieDetails.release_date || movieDetails.first_air_date || '').substring(0, 4) || 'Bilinmeyen Yıl';
         
-        console.log(`[İzlenti AI] Canlı internet araştırması başlatılıyor: ${title}`);
+        console.log(`[İzlenti AI] Canlı internet araştırması başlatılıyor (${year}): ${title}`);
         
-        // Wikipedia üzerinden gerçek zamanlı canlı araştırma yap!
-        const wikiData = await searchWikipedia(title, isTv);
+        // Wikipedia üzerinden yapım yılını da ekleyerek hassas arama yap!
+        const wikiData = await searchWikipedia(title, isTv, year);
         
         if (wikiData) {
             console.log(`[İzlenti AI] Gerçek zamanlı internet bulguları alındı (${wikiData.title})`);
         } else {
-            console.log('[İzlenti AI] İnternet bulgusu bulunamadı, semantik sentez motoruna geçiliyor');
+            console.log('[İzlenti AI] İnternet bulgusu bulunamadı veya yıl uyuşmazlığı nedeniyle pas geçildi, semantik sentez motoruna geçiliyor');
         }
 
         const data = generateLocalReview(movieDetails, credits, mediaType, wikiData);
