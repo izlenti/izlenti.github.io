@@ -294,6 +294,31 @@ const generateLocalReview = (movieDetails, credits, mediaType, wikiResearchData)
           ];
     const finalVerdict = finalVerdictOptions[Math.floor(seed * 4) % finalVerdictOptions.length];
 
+    // --- GÜÇLÜ VE ZAYIF YÖNLER (PLOT VE GENRE ODAKLI) ---
+    let strengths = [];
+    let weaknesses = [];
+
+    if (score >= 6.7) {
+        strengths = [
+            `Yönetmen ${dirText} tarafından tasarlanan sürükleyici görsel vizyon ve estetik sahneler`,
+            `${castText} kadrosunun karakterlerin psikolojik dünyasını yansıtmada sergilediği üstün uyum`,
+            `${genreStr} janrının formüllerini son derece yenilikçi ve derinlikli bir şekilde işlemesi`
+        ];
+        weaknesses = [
+            "Anlatının felsefi derinliği ve temposu nedeniyle sabırlı izleyiciler gerektirmesi",
+            "Yan karakterlerin bazılarının ana hikaye odağı kadar derinleştirilmemiş hissettirmesi"
+        ];
+    } else {
+        strengths = [
+            `Yapımın giriş bölümündeki ilgi çekici çıkış noktası ve merak uyandıran başlangıcı`,
+            `Teknik kadronun loş atmosfer ve renk paleti seçimindeki estetik çabası`
+        ];
+        weaknesses = [
+            `Senaryonun ${conceptMiddle.slice(0, 45)}... potansiyelini yavan diyaloglarla harcaması`,
+            "Kurgusal sarkmalar ve son çeyrekteki aceleye getirilmiş, tahmin edilebilir son"
+        ];
+    }
+
     return {
         verdict,
         score,
