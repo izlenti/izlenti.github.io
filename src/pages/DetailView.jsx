@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Film, Star, PlayCircle, Award, ExternalLink, Heart, Clock,
-    Brain, ThumbsUp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, Sparkles
+    Brain, ThumbsUp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, Sparkles, Globe
 } from 'lucide-react';
 import { TMDB_API_KEY, TMDB_BASE_URL, IMAGE_BASE_URL, BACKDROP_BASE_URL, LOGO_BASE_URL } from '../lib/constants.jsx';
 import { generateDeepAnalysis, translateText, getExternalLinks, getAIBadge, getReleaseStatus, formatTurkishDate } from '../lib/utils';
@@ -397,6 +397,35 @@ const DetailView = ({ toggleWatchlist, isInWatchlist }) => {
                                                 <p className="text-slate-200 text-sm md:text-base leading-relaxed font-medium">
                                                     {geminiReview.summary}
                                                 </p>
+                                            </div>
+                                        )}
+
+                                        {/* Canlı İnternet Araştırma Bulguları (Wikipedia) */}
+                                        {geminiReview.wikiResearch && (
+                                            <div className="bg-gradient-to-r from-blue-950/30 to-cyan-950/30 border border-blue-500/20 rounded-xl p-4 md:p-5 flex gap-4 items-start relative overflow-hidden group">
+                                                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                                                <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-400 border border-blue-500/20 shrink-0">
+                                                    <Globe className="w-5 h-5 animate-pulse" />
+                                                </div>
+                                                <div className="space-y-1.5 z-10">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider">CANLI İNTERNET ARAŞTIRMASI (WIKIPEDIA)</span>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                                    </div>
+                                                    <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-light italic">
+                                                        "{geminiReview.wikiResearch}"
+                                                    </p>
+                                                    {geminiReview.wikiUrl && (
+                                                        <a 
+                                                            href={geminiReview.wikiUrl} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer" 
+                                                            className="text-[10px] md:text-xs text-blue-400 hover:text-blue-300 font-medium underline inline-flex items-center gap-1 mt-1 transition-colors"
+                                                        >
+                                                            Kaynağı Wikipedia'da Gör ↗
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
 
